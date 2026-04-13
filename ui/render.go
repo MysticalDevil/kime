@@ -63,6 +63,9 @@ var (
 			Background(lipgloss.Color("#444444")).
 			PaddingLeft(1).
 			PaddingRight(1)
+
+	progressFilledStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("#00D26A"))
+	progressEmptyStyle  = lipgloss.NewStyle().Foreground(lipgloss.Color("#5B5B5B"))
 )
 
 // Render builds the terminal UI from API responses.
@@ -275,8 +278,8 @@ func renderProgressBar(remainingStr, limitStr string, width int) string {
 	filled := int(ratio * float64(width))
 	empty := width - filled
 
-	bar := lipgloss.NewStyle().Foreground(lipgloss.Color("#00D26A")).Render(strings.Repeat("█", filled)) +
-		lipgloss.NewStyle().Foreground(lipgloss.Color("#5B5B5B")).Render(strings.Repeat("░", empty))
+	bar := progressFilledStyle.Render(strings.Repeat("█", filled)) +
+		progressEmptyStyle.Render(strings.Repeat("░", empty))
 
 	return fmt.Sprintf("%s  %.0f%%", bar, ratio*100)
 }
