@@ -20,7 +20,7 @@
 - **我的权益** – 本地缓存 7 天
 - **模型权限** – 本地缓存 7 天
 - 使用 [Lipgloss](https://github.com/charmbracelet/lipgloss) 绘制的 Unicode 圆角边框与彩色 UI
-- 双语输出：**中文（默认）** 和 **英文**
+- 多语言输出：**简体中文（默认）**、繁体中文、英文和日文
 - Mock 模式，测试时不触发真实 API 请求
 
 ---
@@ -117,7 +117,7 @@ kime init
 | `device_id` | `x-msh-device-id` 请求头值（若省略，自动从 JWT 提取） |
 | `session_id` | `x-msh-session-id` 请求头值（若省略，自动从 JWT 提取） |
 | `user_id` | `x-traffic-id` 请求头值，即用户 ID（若省略，自动从 JWT 提取） |
-| `language` | 界面语言：`"zh"`（默认）或 `"en"` |
+| `language` | 界面语言：`"zh"`（默认）、`"zh_TW"`、`"en"`、`"ja"` |
 | `show_progress` | 设为 `true` 将用量卡片显示为进度条，而非纯数字 |
 
 ### 环境变量（覆盖配置文件）
@@ -128,6 +128,7 @@ kime init
 | `KIME_DEVICE_ID` | 设备 ID |
 | `KIME_SESSION_ID` | 会话 ID |
 | `KIME_USER_ID` | 用户 ID |
+| `KIME_LANG` | 界面语言：`zh`、`zh_TW`、`en`、`ja` |
 | `KIME_MOCK` | 设为 `1` 开启 Mock 模式（不请求真实 API） |
 
 如果 `device_id` 或 `user_id` 缺失，`kime` 会自动尝试从 JWT payload 中解码提取。

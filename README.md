@@ -20,7 +20,7 @@ A beautiful CLI tool to display your **Kimi Code Console** stats in the terminal
 - **My Benefits** – cached for 7 days
 - **Model Permissions** – cached for 7 days
 - Beautiful Unicode-box UI powered by [Lipgloss](https://github.com/charmbracelet/lipgloss)
-- Bilingual output: **Chinese (default)** and **English**
+- Multilingual output: **Chinese (default)**, Traditional Chinese, English, and Japanese
 - Mock mode for safe testing without hitting real APIs
 
 ---
@@ -62,7 +62,8 @@ mv kime ~/.local/bin/
 
 ## Configuration
 
-`kime` reads credentials from `~/.config/kime/config.json` (created automatically if you use browser extraction, or you can create it manually).
+`kime` reads credentials from `~/.config/kime/config.json`
+(created automatically if you use browser extraction, or you can create it manually).
 
 ### Interactive setup
 
@@ -72,7 +73,9 @@ The easiest way to configure `kime` is via the built-in interactive wizard:
 kime init
 ```
 
-This will prompt you for your token and auto-extract `device_id`, `session_id`, and `user_id` from the JWT payload. You can also set your preferred language and other options.
+This will prompt you for your token and auto-extract `device_id`, `session_id`,
+and `user_id` from the JWT payload. You can also set your preferred language and
+other options.
 
 ### How to obtain credentials (DevTools)
 
@@ -85,8 +88,8 @@ This will prompt you for your token and auto-extract `device_id`, `session_id`, 
    ```
 
    This copies your JWT token to the clipboard. Paste it as the `token` field.
-
-4. (Optional) If you want to fill the other fields manually, paste the token into [jwt.io](https://jwt.io) to decode the payload, or run in Console:
+4. (Optional) If you want to fill the other fields manually, paste the token into
+   [jwt.io](https://jwt.io) to decode the payload, or run in Console:
 
    ```javascript
    const parts = localStorage.getItem('access_token').split('.');
@@ -117,7 +120,7 @@ This will prompt you for your token and auto-extract `device_id`, `session_id`, 
 | `device_id` | `x-msh-device-id` header value (auto-extracted from JWT if omitted) |
 | `session_id` | `x-msh-session-id` header value (auto-extracted from JWT if omitted) |
 | `user_id` | `x-traffic-id` header value, i.e. your user ID (auto-extracted from JWT if omitted) |
-| `language` | UI language: `"zh"` (default) or `"en"` |
+| `language` | UI language: `"zh"` (default), `"zh_TW"`, `"en"`, or `"ja"` |
 | `show_progress` | Set to `true` to show usage cards as progress bars instead of plain numbers |
 
 ### Environment variables (override config)
@@ -128,6 +131,7 @@ This will prompt you for your token and auto-extract `device_id`, `session_id`, 
 | `KIME_DEVICE_ID` | Device ID |
 | `KIME_SESSION_ID` | Session ID |
 | `KIME_USER_ID` | User ID |
+| `KIME_LANG` | UI language: `zh`, `zh_TW`, `en`, or `ja` |
 | `KIME_MOCK` | Set to `1` to enable mock mode (no real API calls) |
 
 If `device_id` or `user_id` is missing, `kime` will try to extract them from the JWT payload automatically.
@@ -153,7 +157,8 @@ KIME_MOCK=1 kime
 
 - **Cache file**: `~/.cache/kime/membership.json`
 - **TTL**: 7 days
-- "My Benefits" and "Model Permissions" are served from cache when valid; "Weekly Usage" and "Rate Limit" are always fetched live.
+- "My Benefits" and "Model Permissions" are served from cache when valid;
+  "Weekly Usage" and "Rate Limit" are always fetched live.
 
 ---
 
