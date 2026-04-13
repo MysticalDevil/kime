@@ -81,6 +81,10 @@ func main() {
 	}
 
 	// 3. Render output
-	output := ui.Render(usages, sub, tr)
+	showProgress := false
+	if cfg != nil {
+		showProgress = cfg.ShowProgress
+	}
+	output := ui.Render(usages, sub, tr, showProgress)
 	fmt.Println(output)
 }

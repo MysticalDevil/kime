@@ -3,68 +3,69 @@ package ui
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
-	"github.com/charmbracelet/lipgloss"
 	"github.com/MysticalDevil/kime/api"
 	"github.com/MysticalDevil/kime/i18n"
+	"github.com/charmbracelet/lipgloss"
 )
 
 var (
 	titleStyle = lipgloss.NewStyle().
-		Bold(true).
-		Foreground(lipgloss.Color("#00D26A")).
-		MarginLeft(2).
-		MarginBottom(0)
+			Bold(true).
+			Foreground(lipgloss.Color("#00D26A")).
+			MarginLeft(2).
+			MarginBottom(0)
 
 	cardStyle = lipgloss.NewStyle().
-		Border(lipgloss.RoundedBorder()).
-		BorderForeground(lipgloss.Color("#5B5B5B")).
-		Padding(0, 1).
-		Width(30)
+			Border(lipgloss.RoundedBorder()).
+			BorderForeground(lipgloss.Color("#5B5B5B")).
+			Padding(0, 1).
+			Width(30)
 
 	cardTitleStyle = lipgloss.NewStyle().
-		Bold(true).
-		Foreground(lipgloss.Color("#FFFFFF")).
-		MarginBottom(1)
+			Bold(true).
+			Foreground(lipgloss.Color("#FFFFFF")).
+			MarginBottom(1)
 
 	cardValueStyle = lipgloss.NewStyle().
-		Bold(true).
-		Foreground(lipgloss.Color("#00D26A"))
+			Bold(true).
+			Foreground(lipgloss.Color("#00D26A"))
 
 	cardLabelStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#A0A0A0"))
+			Foreground(lipgloss.Color("#A0A0A0"))
 
 	sectionTitleStyle = lipgloss.NewStyle().
-		Bold(true).
-		Foreground(lipgloss.Color("#FFD700")).
-		MarginLeft(2).
-		MarginBottom(0)
+				Bold(true).
+				Foreground(lipgloss.Color("#FFD700")).
+				MarginLeft(2).
+				MarginBottom(0)
 
 	boxStyle = lipgloss.NewStyle().
-		Border(lipgloss.RoundedBorder()).
-		BorderForeground(lipgloss.Color("#5B5B5B")).
-		Padding(0, 1)
+			Border(lipgloss.RoundedBorder()).
+			BorderForeground(lipgloss.Color("#5B5B5B")).
+			Padding(0, 1)
 
 	rowEvenStyle = lipgloss.NewStyle().
-		Background(lipgloss.Color("#2A2A2A")).
-		PaddingLeft(1).
-		PaddingRight(1)
+			Background(lipgloss.Color("#2A2A2A")).
+			PaddingLeft(1).
+			PaddingRight(1)
 
 	rowOddStyle = lipgloss.NewStyle().
-		PaddingLeft(1).
-		PaddingRight(1)
+			PaddingLeft(1).
+			PaddingRight(1)
 
 	headerStyle = lipgloss.NewStyle().
-		Bold(true).
-		Foreground(lipgloss.Color("#FFFFFF")).
-		Background(lipgloss.Color("#444444")).
-		PaddingLeft(1).
-		PaddingRight(1)
+			Bold(true).
+			Foreground(lipgloss.Color("#FFFFFF")).
+			Background(lipgloss.Color("#444444")).
+			PaddingLeft(1).
+			PaddingRight(1)
 )
 
-func Render(usages *api.GetUsagesResponse, sub *api.GetSubscriptionResponse, tr *i18n.I18n) string {
+func Render(usages *api.GetUsagesResponse, sub *api.GetSubscriptionResponse, tr *i18n.I18n, showProgress bool) string {
 	var sb strings.Builder
 
 	sb.WriteString(titleStyle.Render(tr.T("title")))
@@ -74,17 +75,17 @@ func Render(usages *api.GetUsagesResponse, sub *api.GetSubscriptionResponse, tr 
 	var card1, card2 string
 	if len(usages.Usages) > 0 {
 		u := usages.Usages[0]
-		card1 = buildUsageCard(tr.T("weekly_usage"), u.Detail, "", tr)
+		card1 = buildUsageCard(tr.T("weekly_usage"), u.Detail, "", tr, showProgress)
 		if len(u.Limits) > 0 {
 			limit := u.Limits[0]
 			windowText := formatWindow(limit.Window.Duration)
-			card2 = buildUsageCard(tr.T("rate_limit"), limit.Detail, windowText, tr)
+			card2 = buildUsageCard(tr.T("rate_limit"), limit.Detail, windowText, tr, showProgress)
 		} else {
-			card2 = buildUsageCard(tr.T("rate_limit"), api.UsageDetail{}, "", tr)
+			card2 = buildUsageCard(tr.T("rate_limit"), api.UsageDetail{}, "", tr, showProgress)
 		}
 	} else {
-		card1 = buildUsageCard(tr.T("weekly_usage"), api.UsageDetail{}, "", tr)
-		card2 = buildUsageCard(tr.T("rate_limit"), api.UsageDetail{}, "", tr)
+		card1 = buildUsageCard(tr.T("weekly_usage"), api.UsageDetail{}, "", tr, showProgress)
+		card2 = buildUsageCard(tr.T("rate_limit"), api.UsageDetail{}, "", tr, showProgress)
 	}
 
 	sb.WriteString(lipgloss.JoinHorizontal(lipgloss.Top, card1, " ", card2))
@@ -112,7 +113,7 @@ func formatWindow(minutes int) string {
 	return fmt.Sprintf("%dmin", minutes)
 }
 
-func buildUsageCard(title string, detail api.UsageDetail, extra string, tr *i18n.I18n) string {
+func buildUsageCard(title string, detail api.UsageDetail, extra string, tr *i18n.I18n, showProgress bool) string {
 	var content strings.Builder
 	content.WriteString(cardTitleStyle.Render(title))
 	content.WriteString("\n")
@@ -122,10 +123,16 @@ func buildUsageCard(title string, detail api.UsageDetail, extra string, tr *i18n
 		return cardStyle.Render(content.String())
 	}
 
-	fmt.Fprintf(&content, "%s  %s",
-		cardLabelStyle.Render(tr.T("remaining_total")),
-		cardValueStyle.Render(fmt.Sprintf("%s / %s", detail.Remaining, detail.Limit)),
-	)
+	if showProgress {
+		content.WriteString(cardLabelStyle.Render(tr.T("remaining_total")))
+		content.WriteString("\n")
+		content.WriteString(renderProgressBar(detail.Remaining, detail.Limit, 18))
+	} else {
+		fmt.Fprintf(&content, "%s  %s",
+			cardLabelStyle.Render(tr.T("remaining_total")),
+			cardValueStyle.Render(fmt.Sprintf("%s / %s", detail.Remaining, detail.Limit)),
+		)
+	}
 
 	if extra != "" {
 		fmt.Fprintf(&content, "\n%s  %s",
@@ -235,4 +242,28 @@ func featureName(feature string, tr *i18n.I18n) string {
 		return v
 	}
 	return feature
+}
+
+func renderProgressBar(remainingStr, limitStr string, width int) string {
+	rem, err1 := strconv.ParseFloat(remainingStr, 64)
+	lim, err2 := strconv.ParseFloat(limitStr, 64)
+	if err1 != nil || err2 != nil || lim <= 0 {
+		return fmt.Sprintf("%s / %s", remainingStr, limitStr)
+	}
+
+	ratio := rem / lim
+	if ratio < 0 {
+		ratio = 0
+	}
+	if ratio > 1 {
+		ratio = 1
+	}
+
+	filled := int(ratio * float64(width))
+	empty := width - filled
+
+	bar := lipgloss.NewStyle().Foreground(lipgloss.Color("#00D26A")).Render(strings.Repeat("█", filled)) +
+		lipgloss.NewStyle().Foreground(lipgloss.Color("#5B5B5B")).Render(strings.Repeat("░", empty))
+
+	return fmt.Sprintf("%s  %.0f%%", bar, ratio*100)
 }

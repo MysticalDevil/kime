@@ -11,11 +11,12 @@ import (
 )
 
 type Config struct {
-	Token     string `json:"token"`
-	DeviceID  string `json:"device_id"`
-	SessionID string `json:"session_id"`
-	UserID    string `json:"user_id"`
-	Language  string `json:"language"`
+	Token        string `json:"token"`
+	DeviceID     string `json:"device_id"`
+	SessionID    string `json:"session_id"`
+	UserID       string `json:"user_id"`
+	Language     string `json:"language"`
+	ShowProgress bool   `json:"show_progress"`
 }
 
 func configDir() string {
@@ -28,7 +29,7 @@ func configPath() string {
 }
 
 func ensureDir() error {
-	return os.MkdirAll(configDir(), 0755)
+	return os.MkdirAll(configDir(), 0o755)
 }
 
 // Load reads config file
@@ -60,7 +61,7 @@ func Save(cfg *Config) error {
 	if err != nil {
 		return err
 	}
-	return os.WriteFile(configPath(), b, 0600)
+	return os.WriteFile(configPath(), b, 0o600)
 }
 
 // ExtractJWTClaims extracts fields from JWT payload without verifying signature
