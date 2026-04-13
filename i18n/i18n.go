@@ -8,8 +8,12 @@ type I18n struct {
 	Lang string
 }
 
-var translations = map[string]map[string]string{
-	"zh": {
+type locale map[string]string
+
+type catalog map[string]locale
+
+var translations = catalog{
+	"zh": locale{
 		"title":              "🌙 Kimi Code Console",
 		"weekly_usage":       "本周用量",
 		"rate_limit":         "频限明细",
@@ -39,7 +43,7 @@ var translations = map[string]map[string]string{
 		"parse_cache_failed": "解析缓存失败",
 		"save_cache_failed":  "保存缓存失败",
 	},
-	"en": {
+	"en": locale{
 		"title":              "🌙 Kimi Code Console",
 		"weekly_usage":       "Weekly Usage",
 		"rate_limit":         "Rate Limit",
@@ -71,6 +75,14 @@ var translations = map[string]map[string]string{
 	},
 }
 
+func (c catalog) lookup(lang, key string) string {
+	if s, ok := c[lang][key]; ok {
+		return s
+	}
+
+	return c["zh"][key]
+}
+
 // New creates an I18n instance for the given language.
 func New(lang string) *I18n {
 	if lang != "zh" && lang != "en" {
@@ -82,10 +94,7 @@ func New(lang string) *I18n {
 
 // T returns the translated string for key, optionally formatting args.
 func (i *I18n) T(key string, args ...any) string {
-	s, ok := translations[i.Lang][key]
-	if !ok {
-		s = translations["zh"][key]
-	}
+	s := translations.lookup(i.Lang, key)
 
 	if len(args) > 0 {
 		return fmt.Sprintf(s, args...)
