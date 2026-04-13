@@ -27,7 +27,9 @@ func main() {
 	}
 
 	lang := "zh"
-	if cfg != nil && cfg.Language != "" {
+	if v := os.Getenv("KIME_LANG"); v != "" {
+		lang = v
+	} else if cfg != nil && cfg.Language != "" {
 		lang = cfg.Language
 	}
 	tr := i18n.New(lang)
