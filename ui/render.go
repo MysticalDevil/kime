@@ -87,6 +87,7 @@ func Render(usages *api.GetUsagesResponse, sub *api.GetSubscriptionResponse, tr 
 		u := usages.Usages[0]
 
 		card1 = buildUsageCard(tr.T("weekly_usage"), u.Detail, "", tr, showProgress)
+
 		if len(u.Limits) > 0 {
 			limit := u.Limits[0]
 			windowText := formatWindow(limit.Window.Duration)
@@ -133,6 +134,7 @@ func formatWindow(minutes int) string {
 
 func buildUsageCard(title string, detail api.UsageDetail, extra string, tr *i18n.I18n, showProgress bool) string {
 	var content strings.Builder
+
 	content.WriteString(cardTitleStyle.Render(title))
 	content.WriteString("\n")
 
@@ -218,13 +220,11 @@ func buildCapabilityTable(caps []api.Capability, tr *i18n.I18n) string {
 	nameWidth := 28
 	paraWidth := 14
 
-	var rows []string
-
-	header := lipgloss.JoinHorizontal(lipgloss.Left,
+	rows := make([]string, 0, len(caps)+1)
+	rows = append(rows, lipgloss.JoinHorizontal(lipgloss.Left,
 		headerStyle.Width(nameWidth).Render(tr.T("feature")),
 		headerStyle.Width(paraWidth).Render(tr.T("parallelism")),
-	)
-	rows = append(rows, header)
+	))
 
 	for i, c := range caps {
 		name := featureName(c.Feature, tr)

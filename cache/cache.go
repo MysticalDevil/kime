@@ -7,6 +7,8 @@ import (
 	"os"
 	"path/filepath"
 	"time"
+
+	"github.com/MysticalDevil/kime/internal/jsonx"
 )
 
 const cacheFileName = "membership.json"
@@ -61,7 +63,7 @@ func Load(ttl time.Duration) (json.RawMessage, error) {
 	}
 
 	var cache MembershipCache
-	if err = json.Unmarshal(b, &cache); err != nil {
+	if err = jsonx.Unmarshal(b, &cache); err != nil {
 		return nil, err
 	}
 
@@ -93,7 +95,7 @@ func Save(data json.RawMessage) error {
 		Data:     data,
 	}
 
-	b, err := json.MarshalIndent(mc, "", "  ")
+	b, err := jsonx.MarshalIndent(mc, "", "  ")
 	if err != nil {
 		return err
 	}

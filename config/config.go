@@ -3,11 +3,12 @@ package config
 
 import (
 	"encoding/base64"
-	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/MysticalDevil/kime/internal/jsonx"
 )
 
 // Config holds user credentials and preferences.
@@ -64,7 +65,7 @@ func Load() (*Config, error) {
 	}
 
 	var cfg Config
-	if err := json.Unmarshal(b, &cfg); err != nil {
+	if err := jsonx.Unmarshal(b, &cfg); err != nil {
 		return nil, err
 	}
 
@@ -86,7 +87,7 @@ func Save(cfg *Config) error {
 		return err
 	}
 
-	b, err := json.MarshalIndent(cfg, "", "  ")
+	b, err := jsonx.MarshalIndent(cfg, "", "  ")
 	if err != nil {
 		return err
 	}
@@ -107,7 +108,7 @@ func ExtractJWTClaims(token string) (map[string]string, error) {
 	}
 
 	var claims map[string]any
-	if err := json.Unmarshal(b, &claims); err != nil {
+	if err := jsonx.Unmarshal(b, &claims); err != nil {
 		return nil, err
 	}
 

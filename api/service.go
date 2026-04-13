@@ -3,10 +3,11 @@ package api
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"os"
 	"time"
+
+	"github.com/MysticalDevil/kime/internal/jsonx"
 )
 
 func mockUsagesJSON() string {
@@ -119,7 +120,7 @@ func IsMock() bool {
 func (c *Client) GetUsages(ctx context.Context, scope string) (*GetUsagesResponse, error) {
 	if IsMock() {
 		var resp GetUsagesResponse
-		if err := json.Unmarshal([]byte(mockUsagesJSON()), &resp); err != nil {
+		if err := jsonx.Unmarshal([]byte(mockUsagesJSON()), &resp); err != nil {
 			return nil, err
 		}
 
@@ -136,7 +137,7 @@ func (c *Client) GetUsages(ctx context.Context, scope string) (*GetUsagesRespons
 	}
 
 	var resp GetUsagesResponse
-	if err := json.Unmarshal(body, &resp); err != nil {
+	if err := jsonx.Unmarshal(body, &resp); err != nil {
 		return nil, err
 	}
 
@@ -147,7 +148,7 @@ func (c *Client) GetUsages(ctx context.Context, scope string) (*GetUsagesRespons
 func (c *Client) GetSubscription(ctx context.Context) (*GetSubscriptionResponse, error) {
 	if IsMock() {
 		var resp GetSubscriptionResponse
-		if err := json.Unmarshal([]byte(mockSubscriptionJSON), &resp); err != nil {
+		if err := jsonx.Unmarshal([]byte(mockSubscriptionJSON), &resp); err != nil {
 			return nil, err
 		}
 
@@ -164,7 +165,7 @@ func (c *Client) GetSubscription(ctx context.Context) (*GetSubscriptionResponse,
 	}
 
 	var resp GetSubscriptionResponse
-	if err := json.Unmarshal(body, &resp); err != nil {
+	if err := jsonx.Unmarshal(body, &resp); err != nil {
 		return nil, err
 	}
 

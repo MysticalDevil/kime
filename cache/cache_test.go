@@ -40,6 +40,7 @@ func TestSaveAndLoad(t *testing.T) {
 	_ = json.Unmarshal(loaded, &loadedMap)
 
 	_ = json.Unmarshal(data, &dataMap)
+
 	if loadedMap["foo"] != dataMap["foo"] {
 		t.Errorf("loaded = %s, want %s", loaded, data)
 	}
