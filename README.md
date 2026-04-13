@@ -64,6 +64,16 @@ mv kime ~/.local/bin/
 
 `kime` reads credentials from `~/.config/kime/config.json` (created automatically if you use browser extraction, or you can create it manually).
 
+### Interactive setup
+
+The easiest way to configure `kime` is via the built-in interactive wizard:
+
+```bash
+kime init
+```
+
+This will prompt you for your token and auto-extract `device_id`, `session_id`, and `user_id` from the JWT payload. You can also set your preferred language and other options.
+
 ### How to obtain credentials (DevTools)
 
 1. Open [https://www.kimi.com/code/console?from=kfc_overview_topbar](https://www.kimi.com/code/console?from=kfc_overview_topbar) and log in.

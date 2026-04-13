@@ -64,6 +64,16 @@ mv kime ~/.local/bin/
 
 `kime` 从 `~/.config/kime/config.json` 读取凭证（可手动创建，也可通过浏览器自动提取）。
 
+### 交互式配置
+
+最简单的配置方式是使用内置的交互式向导：
+
+```bash
+kime init
+```
+
+向导会提示你输入 token，并自动从 JWT 中解析 `device_id`、`session_id` 和 `user_id`。你还可以设置偏好语言等选项。
+
 ### 如何获取凭证（开发者工具）
 
 1. 打开 [https://www.kimi.com/code/console?from=kfc_overview_topbar](https://www.kimi.com/code/console?from=kfc_overview_topbar) 并登录。

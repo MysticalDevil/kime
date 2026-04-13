@@ -2,6 +2,7 @@
 package config
 
 import (
+	"bufio"
 	"bytes"
 	"encoding/base64"
 	"encoding/json/jsontext"
@@ -11,6 +12,7 @@ import (
 	"strings"
 
 	jsonv2 "encoding/json/v2"
+	"github.com/charmbracelet/x/term"
 )
 
 // Config holds user credentials and preferences.
@@ -134,4 +136,85 @@ func ExtractJWTClaims(token string) (map[string]string, error) {
 	}
 
 	return result, nil
+}
+
+// InitInteractive runs an interactive prompt to create or update the config file.
+func InitInteractive() (*Config, error) {
+	reader := bufio.NewReader(os.Stdin)
+
+	fmt.Print("Token (hidden input): ")
+
+	tokenBytes, err := term.ReadPassword(os.Stdin.Fd())
+	if err != nil {
+		return nil, fmt.Errorf("failed to read token: %w", err)
+	}
+
+	fmt.Println()
+
+	token := strings.TrimSpace(string(tokenBytes))
+	if token == "" {
+		return nil, fmt.Errorf("token is required")
+	}
+
+	deviceID, sessionID, userID := "", "", ""
+
+	claims, err := ExtractJWTClaims(token)
+	if err == nil {
+		deviceID = claims["device_id"]
+		sessionID = claims["ssid"]
+		userID = claims["sub"]
+	}
+
+	deviceID = promptOrDefault(reader, "Device ID", deviceID)
+	sessionID = promptOrDefault(reader, "Session ID", sessionID)
+	userID = promptOrDefault(reader, "User ID", userID)
+
+	lang := promptOrDefault(reader, "Language (zh/zh_TW/en/ja)", "zh")
+
+	showProgress := false
+	if v := promptOrDefault(reader, "Show progress bar (y/N)", "N"); strings.EqualFold(v, "y") || strings.EqualFold(v, "yes") {
+		showProgress = true
+	}
+
+	cfg := &Config{
+		Token:        token,
+		DeviceID:     deviceID,
+		SessionID:    sessionID,
+		UserID:       userID,
+		Language:     lang,
+		ShowProgress: showProgress,
+	}
+
+	if err := Save(cfg); err != nil {
+		return nil, err
+	}
+
+	path, err := configPath()
+	if err != nil {
+		return nil, err
+	}
+
+	fmt.Printf("Config saved to %s\n", path)
+
+	return cfg, nil
+}
+
+func promptOrDefault(reader *bufio.Reader, label, defaultValue string) string {
+	if defaultValue != "" {
+		fmt.Printf("%s [%s]: ", label, defaultValue)
+	} else {
+		fmt.Printf("%s: ", label)
+	}
+
+	line, err := reader.ReadString('\n')
+	if err != nil {
+		return defaultValue
+	}
+
+	line = strings.TrimSpace(line)
+	if line == "" {
+		return defaultValue
+	}
+
+	return line
 }

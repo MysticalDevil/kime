@@ -61,6 +61,13 @@ func main() {
 		case "-h", "--help", "help":
 			printHelp()
 			os.Exit(0)
+		case "init":
+			if _, err := config.InitInteractive(); err != nil {
+				fmt.Fprintf(os.Stderr, "init failed: %v\n", err)
+				os.Exit(1)
+			}
+
+			os.Exit(0)
 		}
 	}
 
@@ -115,7 +122,10 @@ func printHelp() {
 	fmt.Printf(`kime %s - Display your Kimi Code Console stats in the terminal.
 
 Usage:
-  kime [flags]
+  kime [command|flags]
+
+Commands:
+  init            Run interactive configuration setup
 
 Flags:
   -h, --help      Show this help message
