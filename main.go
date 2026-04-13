@@ -27,6 +27,7 @@ func main() {
 	} else if cfg != nil && cfg.Language != "" {
 		lang = cfg.Language
 	}
+
 	tr := i18n.New(lang)
 
 	client, err := api.NewClient(cfg)
@@ -54,6 +55,7 @@ func main() {
 	if cfg != nil {
 		showProgress = cfg.ShowProgress
 	}
+
 	output := ui.Render(usages, sub, tr, showProgress)
 	fmt.Println(output)
 }
@@ -73,6 +75,7 @@ func loadSubscription(client *api.Client, tr *i18n.I18n) (*api.GetSubscriptionRe
 		if err := json.Unmarshal(cachedData, sub); err != nil {
 			return nil, fmt.Errorf("%s: %w", tr.T("parse_cache_failed"), err)
 		}
+
 		return sub, nil
 	}
 
@@ -80,11 +83,13 @@ func loadSubscription(client *api.Client, tr *i18n.I18n) (*api.GetSubscriptionRe
 	if err != nil {
 		return nil, err
 	}
+
 	data, err := json.Marshal(sub)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%s: %v\n", tr.T("save_cache_failed"), err)
 	} else if err := cache.Save(data); err != nil {
 		fmt.Fprintf(os.Stderr, "%s: %v\n", tr.T("save_cache_failed"), err)
 	}
+
 	return sub, nil
 }

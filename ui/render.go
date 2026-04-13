@@ -78,8 +78,10 @@ func Render(usages *api.GetUsagesResponse, sub *api.GetSubscriptionResponse, tr 
 
 	// --- Weekly usage & rate limit cards ---
 	var card1, card2 string
+
 	if len(usages.Usages) > 0 {
 		u := usages.Usages[0]
+
 		card1 = buildUsageCard(tr.T("weekly_usage"), u.Detail, "", tr, showProgress)
 		if len(u.Limits) > 0 {
 			limit := u.Limits[0]
@@ -105,11 +107,13 @@ func Render(usages *api.GetUsagesResponse, sub *api.GetSubscriptionResponse, tr 
 	// --- Model permissions ---
 	sb.WriteString(sectionTitleStyle.Render(tr.T("model_permissions")))
 	sb.WriteString("\n")
+
 	if sub != nil {
 		sb.WriteString(buildCapabilityTable(sub.Capabilities, tr))
 	} else {
 		sb.WriteString(buildCapabilityTable(nil, tr))
 	}
+
 	sb.WriteString("\n")
 
 	return sb.String()
@@ -119,6 +123,7 @@ func formatWindow(minutes int) string {
 	if minutes%60 == 0 {
 		return fmt.Sprintf("%dh", minutes/60)
 	}
+
 	return fmt.Sprintf("%dmin", minutes)
 }
 
@@ -210,6 +215,7 @@ func buildCapabilityTable(caps []api.Capability, tr *i18n.I18n) string {
 	paraWidth := 14
 
 	var rows []string
+
 	header := lipgloss.JoinHorizontal(lipgloss.Left,
 		headerStyle.Width(nameWidth).Render(tr.T("feature")),
 		headerStyle.Width(paraWidth).Render(tr.T("parallelism")),
@@ -218,10 +224,12 @@ func buildCapabilityTable(caps []api.Capability, tr *i18n.I18n) string {
 
 	for i, c := range caps {
 		name := featureName(c.Feature, tr)
+
 		rowStyle := rowOddStyle
 		if i%2 == 0 {
 			rowStyle = rowEvenStyle
 		}
+
 		row := lipgloss.JoinHorizontal(lipgloss.Left,
 			rowStyle.Width(nameWidth).Render(name),
 			rowStyle.Width(paraWidth).Render(fmt.Sprintf("%d", c.Constraint.Parallelism)),
@@ -230,6 +238,7 @@ func buildCapabilityTable(caps []api.Capability, tr *i18n.I18n) string {
 	}
 
 	table := lipgloss.JoinVertical(lipgloss.Left, rows...)
+
 	return lipgloss.NewStyle().
 		Border(lipgloss.RoundedBorder()).
 		BorderForeground(lipgloss.Color("#5B5B5B")).
@@ -267,6 +276,7 @@ func featureName(feature string, tr *i18n.I18n) string {
 
 func renderProgressBar(remainingStr, limitStr string, width int) string {
 	rem, err1 := strconv.ParseFloat(remainingStr, 64)
+
 	lim, err2 := strconv.ParseFloat(limitStr, 64)
 	if err1 != nil || err2 != nil || lim <= 0 {
 		return fmt.Sprintf("%s / %s", remainingStr, limitStr)
@@ -276,6 +286,7 @@ func renderProgressBar(remainingStr, limitStr string, width int) string {
 	if ratio < 0 {
 		ratio = 0
 	}
+
 	if ratio > 1 {
 		ratio = 1
 	}
@@ -291,6 +302,7 @@ func renderProgressBar(remainingStr, limitStr string, width int) string {
 
 func cardWidth() int {
 	const defaultWidth = 30
+
 	w, _, err := term.GetSize(os.Stdout.Fd())
 	if err != nil {
 		return defaultWidth
@@ -301,5 +313,6 @@ func cardWidth() int {
 	if calculated < 20 {
 		return defaultWidth
 	}
+
 	return calculated
 }

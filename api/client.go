@@ -68,9 +68,11 @@ func resolveCredentials(cfg *config.Config) (token, deviceID, sessionID, traffic
 	if deviceID == "" {
 		return "", "", "", "", fmt.Errorf("device_id not found, please set KIME_DEVICE_ID or ensure JWT contains device_id")
 	}
+
 	if trafficID == "" {
 		return "", "", "", "", fmt.Errorf("user_id not found, please set KIME_USER_ID or ensure JWT contains sub")
 	}
+
 	if sessionID == "" {
 		sessionID = "0"
 	}
@@ -82,6 +84,7 @@ func firstNonEmpty(a, b string) string {
 	if a != "" {
 		return a
 	}
+
 	return b
 }
 
@@ -89,29 +92,36 @@ func fillFromJWT(token, deviceID, sessionID, trafficID string) (string, string, 
 	if deviceID != "" && sessionID != "" && trafficID != "" {
 		return deviceID, sessionID, trafficID
 	}
+
 	claims, err := config.ExtractJWTClaims(token)
 	if err != nil {
 		return deviceID, sessionID, trafficID
 	}
+
 	if deviceID == "" {
 		deviceID = claims["device_id"]
 	}
+
 	if sessionID == "" {
 		sessionID = claims["ssid"]
 	}
+
 	if trafficID == "" {
 		trafficID = claims["sub"]
 	}
+
 	return deviceID, sessionID, trafficID
 }
 
 func (c *Client) doJSON(method, url string, body any, headers map[string]string) (data []byte, err error) {
 	var bodyReader io.Reader
+
 	if body != nil {
 		b, merr := json.Marshal(body)
 		if merr != nil {
 			return nil, merr
 		}
+
 		bodyReader = bytes.NewReader(b)
 	}
 
@@ -144,6 +154,7 @@ func (c *Client) doJSON(method, url string, body any, headers map[string]string)
 	if rerr != nil {
 		return nil, rerr
 	}
+
 	defer func() {
 		if cerr := resp.Body.Close(); cerr != nil && err == nil {
 			err = cerr

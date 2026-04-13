@@ -25,6 +25,7 @@ func configDir() (string, error) {
 	if err != nil {
 		return "", err
 	}
+
 	return filepath.Join(home, ".config", "kime"), nil
 }
 
@@ -33,6 +34,7 @@ func configPath() (string, error) {
 	if err != nil {
 		return "", err
 	}
+
 	return filepath.Join(dir, "config.json"), nil
 }
 
@@ -41,6 +43,7 @@ func ensureDir() error {
 	if err != nil {
 		return err
 	}
+
 	return os.MkdirAll(dir, 0o755)
 }
 
@@ -50,20 +53,25 @@ func Load() (*Config, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	b, err := os.ReadFile(path)
 	if err != nil {
 		if os.IsNotExist(err) {
 			return nil, nil
 		}
+
 		return nil, err
 	}
+
 	var cfg Config
 	if err := json.Unmarshal(b, &cfg); err != nil {
 		return nil, err
 	}
+
 	if cfg.Language == "" {
 		cfg.Language = "zh"
 	}
+
 	return &cfg, nil
 }
 
@@ -72,14 +80,17 @@ func Save(cfg *Config) error {
 	if err := ensureDir(); err != nil {
 		return err
 	}
+
 	path, err := configPath()
 	if err != nil {
 		return err
 	}
+
 	b, err := json.MarshalIndent(cfg, "", "  ")
 	if err != nil {
 		return err
 	}
+
 	return os.WriteFile(path, b, 0o600)
 }
 
@@ -101,6 +112,7 @@ func ExtractJWTClaims(token string) (map[string]string, error) {
 	}
 
 	result := make(map[string]string)
+
 	for k, v := range claims {
 		switch val := v.(type) {
 		case string:
@@ -109,5 +121,6 @@ func ExtractJWTClaims(token string) (map[string]string, error) {
 			result[k] = fmt.Sprintf("%.0f", val)
 		}
 	}
+
 	return result, nil
 }

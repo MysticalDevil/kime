@@ -72,6 +72,7 @@ func TestRender_ProgressBar(t *testing.T) {
 func TestRender_NilSubscription(t *testing.T) {
 	usages := &api.GetUsagesResponse{}
 	tr := i18n.New("zh")
+
 	output := Render(usages, nil, tr, false)
 	if !strings.Contains(output, "暂无数据") {
 		t.Errorf("output missing fallback text for nil subscription")

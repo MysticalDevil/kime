@@ -11,6 +11,7 @@ import (
 func mockUsagesJSON() string {
 	reset1 := time.Now().Add(7 * 24 * time.Hour).Format(time.RFC3339Nano)
 	reset2 := time.Now().Add(5 * time.Hour).Format(time.RFC3339Nano)
+
 	return fmt.Sprintf(`{
   "usages": [
     {
@@ -120,20 +121,24 @@ func (c *Client) GetUsages(scope string) (*GetUsagesResponse, error) {
 		if err := json.Unmarshal([]byte(mockUsagesJSON()), &resp); err != nil {
 			return nil, err
 		}
+
 		return &resp, nil
 	}
 
 	url := BaseURL + "/apiv2/kimi.gateway.billing.v1.BillingService/GetUsages"
+
 	body, err := c.doJSON("POST", url, GetUsagesRequest{Scope: []string{scope}}, map[string]string{
 		"connect-protocol-version": "1",
 	})
 	if err != nil {
 		return nil, err
 	}
+
 	var resp GetUsagesResponse
 	if err := json.Unmarshal(body, &resp); err != nil {
 		return nil, err
 	}
+
 	return &resp, nil
 }
 
@@ -144,19 +149,23 @@ func (c *Client) GetSubscription() (*GetSubscriptionResponse, error) {
 		if err := json.Unmarshal([]byte(mockSubscriptionJSON), &resp); err != nil {
 			return nil, err
 		}
+
 		return &resp, nil
 	}
 
 	url := BaseURL + "/apiv2/kimi.gateway.membership.v2.MembershipService/GetSubscription"
+
 	body, err := c.doJSON("POST", url, struct{}{}, map[string]string{
 		"connect-protocol-version": "1",
 	})
 	if err != nil {
 		return nil, err
 	}
+
 	var resp GetSubscriptionResponse
 	if err := json.Unmarshal(body, &resp); err != nil {
 		return nil, err
 	}
+
 	return &resp, nil
 }

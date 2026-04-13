@@ -22,15 +22,19 @@ func TestExtractJWTClaims(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
+
 	if result["device_id"] != "123" {
 		t.Errorf("device_id = %q, want 123", result["device_id"])
 	}
+
 	if result["ssid"] != "456" {
 		t.Errorf("ssid = %q, want 456", result["ssid"])
 	}
+
 	if result["sub"] != "789" {
 		t.Errorf("sub = %q, want 789", result["sub"])
 	}
+
 	if result["num"] != "42" {
 		t.Errorf("num = %q, want 42", result["num"])
 	}

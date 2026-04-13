@@ -76,6 +76,7 @@ func New(lang string) *I18n {
 	if lang != "zh" && lang != "en" {
 		lang = "zh"
 	}
+
 	return &I18n{Lang: lang}
 }
 
@@ -85,8 +86,10 @@ func (i *I18n) T(key string, args ...any) string {
 	if !ok {
 		s = translations["zh"][key]
 	}
+
 	if len(args) > 0 {
 		return fmt.Sprintf(s, args...)
 	}
+
 	return s
 }

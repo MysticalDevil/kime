@@ -22,6 +22,7 @@ func cacheDir() (string, error) {
 	if err != nil {
 		return "", err
 	}
+
 	return filepath.Join(home, ".cache", "kime"), nil
 }
 
@@ -30,6 +31,7 @@ func cachePath() (string, error) {
 	if err != nil {
 		return "", err
 	}
+
 	return filepath.Join(dir, cacheFileName), nil
 }
 
@@ -38,6 +40,7 @@ func ensureDir() error {
 	if err != nil {
 		return err
 	}
+
 	return os.MkdirAll(dir, 0o755)
 }
 
@@ -47,11 +50,13 @@ func Load(ttl time.Duration) (json.RawMessage, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	b, err := os.ReadFile(path)
 	if err != nil {
 		if os.IsNotExist(err) {
 			return nil, nil
 		}
+
 		return nil, err
 	}
 
@@ -77,18 +82,22 @@ func Save(data json.RawMessage) error {
 	if err := ensureDir(); err != nil {
 		return err
 	}
+
 	path, err := cachePath()
 	if err != nil {
 		return err
 	}
+
 	mc := MembershipCache{
 		CachedAt: time.Now().Format(time.RFC3339),
 		Data:     data,
 	}
+
 	b, err := json.MarshalIndent(mc, "", "  ")
 	if err != nil {
 		return err
 	}
+
 	return os.WriteFile(path, b, 0o600)
 }
 
@@ -98,9 +107,11 @@ func Clear() error {
 	if err != nil {
 		return err
 	}
+
 	if _, err := os.Stat(path); os.IsNotExist(err) {
 		return nil
 	}
+
 	return os.Remove(path)
 }
 
@@ -110,5 +121,6 @@ func Info() string {
 	if err != nil {
 		return fmt.Sprintf("cache path: error: %v", err)
 	}
+
 	return fmt.Sprintf("cache path: %s", path)
 }

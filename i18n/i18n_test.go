@@ -28,6 +28,7 @@ func TestT_MissingKeyFallsBack(t *testing.T) {
 
 func TestT_Format(t *testing.T) {
 	tr := New("zh")
+
 	got := tr.T("hours_later", 5)
 	if got != "5 小时后" {
 		t.Errorf("hours_later = %q, want 5 小时后", got)
