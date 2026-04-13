@@ -36,7 +36,7 @@ func main() {
 	}
 
 	// 1. Real-time request: weekly usage + rate limit
-	usages, err := client.GetUsages()
+	usages, err := client.GetUsages("FEATURE_CODING")
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%s: %v\n", tr.T("fetch_usage_failed"), err)
 		os.Exit(1)

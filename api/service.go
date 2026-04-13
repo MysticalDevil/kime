@@ -107,8 +107,8 @@ func IsMock() bool {
 	return os.Getenv("KIME_MOCK") != "" && os.Getenv("KIME_MOCK") != "0"
 }
 
-// GetUsages fetches weekly usage and rate limits.
-func (c *Client) GetUsages() (*GetUsagesResponse, error) {
+// GetUsages fetches weekly usage and rate limits for the given scope.
+func (c *Client) GetUsages(scope string) (*GetUsagesResponse, error) {
 	if IsMock() {
 		var resp GetUsagesResponse
 		if err := json.Unmarshal([]byte(mockUsagesJSON), &resp); err != nil {
@@ -118,7 +118,7 @@ func (c *Client) GetUsages() (*GetUsagesResponse, error) {
 	}
 
 	url := BaseURL + "/apiv2/kimi.gateway.billing.v1.BillingService/GetUsages"
-	body, err := c.doJSON("POST", url, GetUsagesRequest{Scope: []string{"FEATURE_CODING"}}, map[string]string{
+	body, err := c.doJSON("POST", url, GetUsagesRequest{Scope: []string{scope}}, map[string]string{
 		"connect-protocol-version": "1",
 	})
 	if err != nil {
