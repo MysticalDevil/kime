@@ -40,7 +40,7 @@ mise use -g ubi:MysticalDevil/kime@latest
 
 ```bash
 git clone https://github.com/MysticalDevil/kime.git
-cd kimi
+cd kime
 go mod tidy
 go build -o kime
 ```
