@@ -14,11 +14,6 @@ import (
 	"github.com/MysticalDevil/kime/ui"
 )
 
-func isMock() bool {
-	v := os.Getenv("KIME_MOCK")
-	return v != "" && v != "0"
-}
-
 func main() {
 	cfg, err := config.Load()
 	if err != nil {
@@ -50,7 +45,7 @@ func main() {
 	// 2. Cache strategy: my benefits + model permissions (7 days TTL)
 	var sub *api.GetSubscriptionResponse
 
-	if isMock() {
+	if api.IsMock() {
 		// Mock mode: bypass cache, return mock data directly
 		sub, err = client.GetSubscription()
 		if err != nil {

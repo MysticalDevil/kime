@@ -102,13 +102,14 @@ var mockSubscriptionJSON = `{
   ]
 }`
 
-func isMock() bool {
+// IsMock returns true when KIME_MOCK is set to a non-zero value.
+func IsMock() bool {
 	return os.Getenv("KIME_MOCK") != "" && os.Getenv("KIME_MOCK") != "0"
 }
 
 // GetUsages fetches weekly usage and rate limits.
 func (c *Client) GetUsages() (*GetUsagesResponse, error) {
-	if isMock() {
+	if IsMock() {
 		var resp GetUsagesResponse
 		if err := json.Unmarshal([]byte(mockUsagesJSON), &resp); err != nil {
 			return nil, err
@@ -132,7 +133,7 @@ func (c *Client) GetUsages() (*GetUsagesResponse, error) {
 
 // GetSubscription fetches subscription, balances and capabilities.
 func (c *Client) GetSubscription() (*GetSubscriptionResponse, error) {
-	if isMock() {
+	if IsMock() {
 		var resp GetSubscriptionResponse
 		if err := json.Unmarshal([]byte(mockSubscriptionJSON), &resp); err != nil {
 			return nil, err
