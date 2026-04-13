@@ -43,41 +43,10 @@ func main() {
 	}
 
 	// 2. Cache strategy: my benefits + model permissions (7 days TTL)
-	var sub *api.GetSubscriptionResponse
-
-	if api.IsMock() {
-		// Mock mode: bypass cache, return mock data directly
-		sub, err = client.GetSubscription()
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "%s: %v\n", tr.T("fetch_sub_failed"), err)
-			os.Exit(1)
-		}
-	} else {
-		cachedData, err := cache.Load(7 * 24 * time.Hour)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "%s: %v\n", tr.T("read_cache_failed"), err)
-			os.Exit(1)
-		}
-
-		if cachedData != nil {
-			sub = &api.GetSubscriptionResponse{}
-			if err = json.Unmarshal(cachedData, sub); err != nil {
-				fmt.Fprintf(os.Stderr, "%s: %v\n", tr.T("parse_cache_failed"), err)
-				os.Exit(1)
-			}
-		} else {
-			sub, err = client.GetSubscription()
-			if err != nil {
-				fmt.Fprintf(os.Stderr, "%s: %v\n", tr.T("fetch_sub_failed"), err)
-				os.Exit(1)
-			}
-			data, err := json.Marshal(sub)
-			if err != nil {
-				fmt.Fprintf(os.Stderr, "%s: %v\n", tr.T("save_cache_failed"), err)
-			} else if err := cache.Save(data); err != nil {
-				fmt.Fprintf(os.Stderr, "%s: %v\n", tr.T("save_cache_failed"), err)
-			}
-		}
+	sub, err := loadSubscription(client, tr)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "%s: %v\n", tr.T("fetch_sub_failed"), err)
+		os.Exit(1)
 	}
 
 	// 3. Render output
@@ -87,4 +56,35 @@ func main() {
 	}
 	output := ui.Render(usages, sub, tr, showProgress)
 	fmt.Println(output)
+}
+
+func loadSubscription(client *api.Client, tr *i18n.I18n) (*api.GetSubscriptionResponse, error) {
+	if api.IsMock() {
+		return client.GetSubscription()
+	}
+
+	cachedData, err := cache.Load(7 * 24 * time.Hour)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", tr.T("read_cache_failed"), err)
+	}
+
+	if cachedData != nil {
+		sub := &api.GetSubscriptionResponse{}
+		if err := json.Unmarshal(cachedData, sub); err != nil {
+			return nil, fmt.Errorf("%s: %w", tr.T("parse_cache_failed"), err)
+		}
+		return sub, nil
+	}
+
+	sub, err := client.GetSubscription()
+	if err != nil {
+		return nil, err
+	}
+	data, err := json.Marshal(sub)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "%s: %v\n", tr.T("save_cache_failed"), err)
+	} else if err := cache.Save(data); err != nil {
+		fmt.Fprintf(os.Stderr, "%s: %v\n", tr.T("save_cache_failed"), err)
+	}
+	return sub, nil
 }
