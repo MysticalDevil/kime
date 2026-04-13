@@ -11,8 +11,8 @@ import (
 	"os"
 	"time"
 
+	jsonv2 "encoding/json/v2"
 	"github.com/MysticalDevil/kime/config"
-	"github.com/MysticalDevil/kime/internal/jsonx"
 )
 
 // BaseURL is the Kimi Code Console API endpoint.
@@ -110,7 +110,7 @@ func (c *Client) doJSON(ctx context.Context, method, url string, body any, heade
 	var bodyReader io.Reader
 
 	if body != nil {
-		b, merr := jsonx.Marshal(body)
+		b, merr := jsonv2.Marshal(body)
 		if merr != nil {
 			return nil, merr
 		}

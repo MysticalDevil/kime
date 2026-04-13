@@ -2,13 +2,15 @@
 package cache
 
 import (
+	"bytes"
 	"encoding/json"
+	"encoding/json/jsontext"
 	"fmt"
 	"os"
 	"path/filepath"
 	"time"
 
-	"github.com/MysticalDevil/kime/internal/jsonx"
+	jsonv2 "encoding/json/v2"
 )
 
 const cacheFileName = "membership.json"
@@ -63,7 +65,7 @@ func Load(ttl time.Duration) (json.RawMessage, error) {
 	}
 
 	var cache MembershipCache
-	if err = jsonx.Unmarshal(b, &cache); err != nil {
+	if err = jsonv2.Unmarshal(b, &cache); err != nil {
 		return nil, err
 	}
 
@@ -95,7 +97,15 @@ func Save(data json.RawMessage) error {
 		Data:     data,
 	}
 
-	b, err := jsonx.MarshalIndent(mc, "", "  ")
+	var buf bytes.Buffer
+
+	enc := jsontext.NewEncoder(&buf, jsontext.WithIndent("  "))
+	if err := jsonv2.MarshalEncode(enc, mc); err != nil {
+		return err
+	}
+
+	b := buf.Bytes()
+
 	if err != nil {
 		return err
 	}

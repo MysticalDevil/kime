@@ -40,11 +40,14 @@ mise use -g ubi:MysticalDevil/kime@latest
 
 ### Build from source
 
+> [!IMPORTANT]
+> This project uses `encoding/json/v2`. You **must** build with `GOEXPERIMENT=jsonv2`:
+
 ```bash
 git clone https://github.com/MysticalDevil/kime.git
 cd kime
 go mod tidy
-go build -o kime
+GOEXPERIMENT=jsonv2 go build -o kime
 ```
 
 Then move the binary to a directory in your `$PATH`:

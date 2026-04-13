@@ -40,11 +40,14 @@ mise use -g ubi:MysticalDevil/kime@latest
 
 ### 源码构建
 
+> [!IMPORTANT]
+> 本项目使用了 `encoding/json/v2`，编译时**必须**携带 `GOEXPERIMENT=jsonv2`：
+
 ```bash
 git clone https://github.com/MysticalDevil/kime.git
 cd kime
 go mod tidy
-go build -o kime
+GOEXPERIMENT=jsonv2 go build -o kime
 ```
 
 将二进制文件移动到 `$PATH` 中的目录：

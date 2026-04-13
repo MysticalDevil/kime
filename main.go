@@ -7,11 +7,11 @@ import (
 	"os"
 	"time"
 
+	jsonv2 "encoding/json/v2"
 	"github.com/MysticalDevil/kime/api"
 	"github.com/MysticalDevil/kime/cache"
 	"github.com/MysticalDevil/kime/config"
 	"github.com/MysticalDevil/kime/i18n"
-	"github.com/MysticalDevil/kime/internal/jsonx"
 	"github.com/MysticalDevil/kime/ui"
 )
 
@@ -75,7 +75,7 @@ func loadSubscription(ctx context.Context, client *api.Client, tr *i18n.I18n) (*
 
 	if cachedData != nil {
 		sub := &api.GetSubscriptionResponse{}
-		if err := jsonx.Unmarshal(cachedData, sub); err != nil {
+		if err := jsonv2.Unmarshal(cachedData, sub); err != nil {
 			return nil, fmt.Errorf("%s: %w", tr.T("parse_cache_failed"), err)
 		}
 
@@ -87,7 +87,7 @@ func loadSubscription(ctx context.Context, client *api.Client, tr *i18n.I18n) (*
 		return nil, err
 	}
 
-	data, err := jsonx.Marshal(sub)
+	data, err := jsonv2.Marshal(sub)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%s: %v\n", tr.T("save_cache_failed"), err)
 	} else if err := cache.Save(data); err != nil {
