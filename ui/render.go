@@ -311,6 +311,10 @@ func cardWidth() int {
 	// Ensure a reasonable minimum so the card doesn't collapse.
 	calculated := (w - 1) / 2
 	if calculated < 20 {
+		if w < defaultWidth {
+			return w - 2
+		}
+
 		return defaultWidth
 	}
 
