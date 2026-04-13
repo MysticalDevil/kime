@@ -91,7 +91,8 @@ mv kime ~/.local/bin/
   "device_id": "1234567890123456789",
   "session_id": "9876543210987654321",
   "user_id": "your_user_id_here",
-  "language": "zh"
+  "language": "zh",
+  "show_progress": false
 }
 ```
 
@@ -102,6 +103,7 @@ mv kime ~/.local/bin/
 | `session_id` | `x-msh-session-id` header value (auto-extracted from JWT if omitted) |
 | `user_id` | `x-traffic-id` header value, i.e. your user ID (auto-extracted from JWT if omitted) |
 | `language` | UI language: `"zh"` (default) or `"en"` |
+| `show_progress` | Set to `true` to show usage cards as progress bars instead of plain numbers |
 
 ### Environment variables (override config)
 

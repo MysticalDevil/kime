@@ -91,7 +91,8 @@ mv kime ~/.local/bin/
   "device_id": "1234567890123456789",
   "session_id": "9876543210987654321",
   "user_id": "your_user_id_here",
-  "language": "zh"
+  "language": "zh",
+  "show_progress": false
 }
 ```
 
@@ -102,6 +103,7 @@ mv kime ~/.local/bin/
 | `session_id` | `x-msh-session-id` 请求头值（若省略，自动从 JWT 提取） |
 | `user_id` | `x-traffic-id` 请求头值，即用户 ID（若省略，自动从 JWT 提取） |
 | `language` | 界面语言：`"zh"`（默认）或 `"en"` |
+| `show_progress` | 设为 `true` 将用量卡片显示为进度条，而非纯数字 |
 
 ### 环境变量（覆盖配置文件）
 
