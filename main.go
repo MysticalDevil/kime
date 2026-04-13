@@ -53,24 +53,35 @@ func isTaggedVersion(v string) bool {
 }
 
 func main() {
-	if len(os.Args) > 1 {
-		switch os.Args[1] {
-		case "-v", "--version", "version":
-			fmt.Println(version)
-			os.Exit(0)
-		case "-h", "--help", "help":
-			printHelp()
-			os.Exit(0)
-		case "init":
-			if _, err := config.InitInteractive(); err != nil {
-				fmt.Fprintf(os.Stderr, "init failed: %v\n", err)
-				os.Exit(1)
-			}
-
-			os.Exit(0)
-		}
+	if len(os.Args) < 2 {
+		printHelp()
+		os.Exit(0)
 	}
 
+	switch os.Args[1] {
+	case "-v", "--version", "version":
+		fmt.Println(version)
+		os.Exit(0)
+	case "-h", "--help", "help":
+		printHelp()
+		os.Exit(0)
+	case "init":
+		if _, err := config.InitInteractive(); err != nil {
+			fmt.Fprintf(os.Stderr, "init failed: %v\n", err)
+			os.Exit(1)
+		}
+
+		os.Exit(0)
+	case "check":
+		runCheck()
+	default:
+		fmt.Fprintf(os.Stderr, "unknown command: %q\n\n", os.Args[1])
+		printHelp()
+		os.Exit(1)
+	}
+}
+
+func runCheck() {
 	cfg, err := config.Load()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "failed to load config: %v\n", err)
@@ -122,9 +133,10 @@ func printHelp() {
 	fmt.Printf(`kime %s - Display your Kimi Code Console stats in the terminal.
 
 Usage:
-  kime [command|flags]
+  kime [command]
 
 Commands:
+  check           Fetch and display Kimi Code Console stats
   init            Run interactive configuration setup
 
 Flags:
