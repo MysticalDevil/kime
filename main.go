@@ -71,8 +71,10 @@ func main() {
 				fmt.Fprintf(os.Stderr, "%s: %v\n", tr.T("fetch_sub_failed"), err)
 				os.Exit(1)
 			}
-			data, _ := json.Marshal(sub)
-			if err := cache.Save(data); err != nil {
+			data, err := json.Marshal(sub)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "%s: %v\n", tr.T("save_cache_failed"), err)
+			} else if err := cache.Save(data); err != nil {
 				fmt.Fprintf(os.Stderr, "%s: %v\n", tr.T("save_cache_failed"), err)
 			}
 		}
