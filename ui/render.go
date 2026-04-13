@@ -161,8 +161,8 @@ func buildUsageCard(title string, detail api.UsageDetail, extra string, tr *i18n
 		content.WriteString("\n")
 	}
 
-	reset := api.ParseTime(detail.ResetTime)
-	if !reset.IsZero() {
+	reset, err := time.Parse(time.RFC3339Nano, detail.ResetTime)
+	if err == nil && !reset.IsZero() {
 		hours := max(int(time.Until(reset).Hours()), 0)
 		fmt.Fprintf(&content, "\n%s  %s",
 			cardLabelStyle.Render(tr.T("reset_time")),
@@ -190,8 +190,8 @@ func buildSubscriptionBox(sub *api.GetSubscriptionResponse, tr *i18n.I18n) strin
 		planNameStyle.Render(planName),
 	)
 
-	endTime := api.ParseTime(sub.Subscription.CurrentEndTime)
-	if !endTime.IsZero() {
+	endTime, err := time.Parse(time.RFC3339Nano, sub.Subscription.CurrentEndTime)
+	if err == nil && !endTime.IsZero() {
 		fmt.Fprintf(&content, "%s  %s\n",
 			cardLabelStyle.Render(tr.T("valid_until")),
 			dateStyle.Render(endTime.Format("2006-01-02")),

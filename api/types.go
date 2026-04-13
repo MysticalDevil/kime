@@ -1,8 +1,6 @@
 // Package api contains request/response types for the Kimi Code Console API.
 package api
 
-import "time"
-
 // ---------- GetUsages ----------
 
 // GetUsagesRequest is the request body for GetUsages.
@@ -110,12 +108,4 @@ type Capability struct {
 // Constraint holds resource limits for a capability.
 type Constraint struct {
 	Parallelism int `json:"parallelism"`
-}
-
-// ---------- Helper ----------
-
-// ParseTime parses an RFC3339Nano timestamp.
-func ParseTime(t string) time.Time {
-	parsed, _ := time.Parse(time.RFC3339Nano, t)
-	return parsed
 }
