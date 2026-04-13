@@ -9,3 +9,11 @@ repos:
     hooks:
       - id: gofumpt
       - id: go-vet
+  - repo: local
+    hooks:
+      - id: golangci-lint-fix
+        name: golangci-lint fix
+        entry: golangci-lint run --fix
+        language: system
+        types: [go]
+        pass_filenames: false
