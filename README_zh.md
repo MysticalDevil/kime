@@ -39,8 +39,8 @@ go install github.com/MysticalDevil/kime@latest
 # 使用 Go backend
 mise use -g go:github.com/MysticalDevil/kime@latest
 
-# 或使用 UBI backend（预编译二进制）
-mise use -g ubi:MysticalDevil/kime@latest
+# 或使用 GitHub backend（预编译二进制）
+mise use -g github:MysticalDevil/kime@latest
 ```
 
 ### 源码构建

@@ -39,8 +39,8 @@ go install github.com/MysticalDevil/kime@latest
 # using the Go backend
 mise use -g go:github.com/MysticalDevil/kime@latest
 
-# or using the UBI backend (prebuilt binary)
-mise use -g ubi:MysticalDevil/kime@latest
+# or using the GitHub backend (prebuilt binary)
+mise use -g github:MysticalDevil/kime@latest
 ```
 
 ### Build from source
