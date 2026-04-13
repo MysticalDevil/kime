@@ -34,7 +34,7 @@ func main() {
 	}
 	tr := i18n.New(lang)
 
-	client, err := api.NewClient()
+	client, err := api.NewClient(cfg)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%s: %v\n", tr.T("auth_failed"), err)
 		os.Exit(1)

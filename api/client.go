@@ -28,9 +28,9 @@ type Client struct {
 	trafficID string
 }
 
-// NewClient creates a Client using config file, environment variables or JWT claims.
-func NewClient() (*Client, error) {
-	token, deviceID, sessionID, trafficID, err := resolveCredentials()
+// NewClient creates a Client using the provided config, environment variables or JWT claims.
+func NewClient(cfg *config.Config) (*Client, error) {
+	token, deviceID, sessionID, trafficID, err := resolveCredentials(cfg)
 	if err != nil {
 		return nil, err
 	}
@@ -46,12 +46,7 @@ func NewClient() (*Client, error) {
 	}, nil
 }
 
-func resolveCredentials() (token, deviceID, sessionID, trafficID string, err error) {
-	cfg, err := config.Load()
-	if err != nil {
-		return "", "", "", "", fmt.Errorf("failed to load config: %w", err)
-	}
-
+func resolveCredentials(cfg *config.Config) (token, deviceID, sessionID, trafficID string, err error) {
 	if cfg != nil && cfg.Token != "" {
 		token = cfg.Token
 		deviceID = cfg.DeviceID
