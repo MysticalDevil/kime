@@ -17,23 +17,36 @@ type MembershipCache struct {
 	Data     json.RawMessage `json:"data"`
 }
 
-func cacheDir() string {
-	home, _ := os.UserHomeDir()
-	return filepath.Join(home, ".cache", "kime")
+func cacheDir() (string, error) {
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return "", err
+	}
+	return filepath.Join(home, ".cache", "kime"), nil
 }
 
-func cachePath() string {
-	return filepath.Join(cacheDir(), cacheFileName)
+func cachePath() (string, error) {
+	dir, err := cacheDir()
+	if err != nil {
+		return "", err
+	}
+	return filepath.Join(dir, cacheFileName), nil
 }
 
 func ensureDir() error {
-	dir := cacheDir()
+	dir, err := cacheDir()
+	if err != nil {
+		return err
+	}
 	return os.MkdirAll(dir, 0o755)
 }
 
-// Load reads cache file, returns nil if not exists or expired
+// Load reads cache file, returns nil if not exists or expired.
 func Load(ttl time.Duration) (json.RawMessage, error) {
-	path := cachePath()
+	path, err := cachePath()
+	if err != nil {
+		return nil, err
+	}
 	b, err := os.ReadFile(path)
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -59,9 +72,13 @@ func Load(ttl time.Duration) (json.RawMessage, error) {
 	return cache.Data, nil
 }
 
-// Save writes cache file
+// Save writes cache file.
 func Save(data json.RawMessage) error {
 	if err := ensureDir(); err != nil {
+		return err
+	}
+	path, err := cachePath()
+	if err != nil {
 		return err
 	}
 	mc := MembershipCache{
@@ -72,12 +89,15 @@ func Save(data json.RawMessage) error {
 	if err != nil {
 		return err
 	}
-	return os.WriteFile(cachePath(), b, 0o644)
+	return os.WriteFile(path, b, 0o644)
 }
 
-// Clear removes cache file
+// Clear removes cache file.
 func Clear() error {
-	path := cachePath()
+	path, err := cachePath()
+	if err != nil {
+		return err
+	}
 	if _, err := os.Stat(path); os.IsNotExist(err) {
 		return nil
 	}
@@ -86,5 +106,9 @@ func Clear() error {
 
 // Info returns the cache file path for debugging.
 func Info() string {
-	return fmt.Sprintf("cache path: %s", cachePath())
+	path, err := cachePath()
+	if err != nil {
+		return fmt.Sprintf("cache path: error: %v", err)
+	}
+	return fmt.Sprintf("cache path: %s", path)
 }

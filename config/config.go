@@ -20,22 +20,36 @@ type Config struct {
 	ShowProgress bool   `json:"show_progress"`
 }
 
-func configDir() string {
-	home, _ := os.UserHomeDir()
-	return filepath.Join(home, ".config", "kime")
+func configDir() (string, error) {
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return "", err
+	}
+	return filepath.Join(home, ".config", "kime"), nil
 }
 
-func configPath() string {
-	return filepath.Join(configDir(), "config.json")
+func configPath() (string, error) {
+	dir, err := configDir()
+	if err != nil {
+		return "", err
+	}
+	return filepath.Join(dir, "config.json"), nil
 }
 
 func ensureDir() error {
-	return os.MkdirAll(configDir(), 0o755)
+	dir, err := configDir()
+	if err != nil {
+		return err
+	}
+	return os.MkdirAll(dir, 0o755)
 }
 
-// Load reads config file
+// Load reads config file.
 func Load() (*Config, error) {
-	path := configPath()
+	path, err := configPath()
+	if err != nil {
+		return nil, err
+	}
 	b, err := os.ReadFile(path)
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -53,16 +67,20 @@ func Load() (*Config, error) {
 	return &cfg, nil
 }
 
-// Save writes config file
+// Save writes config file.
 func Save(cfg *Config) error {
 	if err := ensureDir(); err != nil {
+		return err
+	}
+	path, err := configPath()
+	if err != nil {
 		return err
 	}
 	b, err := json.MarshalIndent(cfg, "", "  ")
 	if err != nil {
 		return err
 	}
-	return os.WriteFile(configPath(), b, 0o600)
+	return os.WriteFile(path, b, 0o600)
 }
 
 // ExtractJWTClaims extracts fields from JWT payload without verifying signature.
