@@ -130,6 +130,7 @@ func (c *Client) doJSON(ctx context.Context, method, url string, body any, heade
 		return nil, rerr
 	}
 
+	// The headers below mimic the Kimi web client to avoid WAF blocks.
 	req.Header.Set("authorization", "Bearer "+c.token)
 	req.Header.Set("x-msh-device-id", c.deviceID)
 	req.Header.Set("x-msh-session-id", c.sessionID)
