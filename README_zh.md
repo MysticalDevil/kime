@@ -138,15 +138,19 @@ kime init
 ## 使用
 
 ```bash
-# 正常运行（中文界面，默认）
+# 查看帮助
 kime
+kime --help
+
+# 查询数据（中文界面，默认）
+kime check
 
 # 英文界面
 # 修改配置文件中的 "language" 为 "en"
-kime
+kime check
 
 # Mock 模式（不发起网络请求）
-KIME_MOCK=1 kime
+KIME_MOCK=1 kime check
 ```
 
 ---

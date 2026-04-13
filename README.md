@@ -141,14 +141,18 @@ If `device_id` or `user_id` is missing, `kime` will try to extract them from the
 ## Usage
 
 ```bash
-# Normal run (Chinese UI, default)
+# Show help
 kime
+kime --help
+
+# Check stats (Chinese UI, default)
+kime check
 
 # English UI
-KIME_LANG=en kime   # or set "language": "en" in config
+KIME_LANG=en kime check   # or set "language": "en" in config
 
 # Mock mode (no network requests)
-KIME_MOCK=1 kime
+KIME_MOCK=1 kime check
 ```
 
 ---
