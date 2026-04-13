@@ -105,7 +105,11 @@ func Render(usages *api.GetUsagesResponse, sub *api.GetSubscriptionResponse, tr 
 	// --- Model permissions ---
 	sb.WriteString(sectionTitleStyle.Render(tr.T("model_permissions")))
 	sb.WriteString("\n")
-	sb.WriteString(buildCapabilityTable(sub.Capabilities, tr))
+	if sub != nil {
+		sb.WriteString(buildCapabilityTable(sub.Capabilities, tr))
+	} else {
+		sb.WriteString(buildCapabilityTable(nil, tr))
+	}
 	sb.WriteString("\n")
 
 	return sb.String()
