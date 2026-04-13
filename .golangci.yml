@@ -26,6 +26,7 @@ linters:
     - unconvert
     - unparam
     - whitespace
+    - wsl_v5
 
   settings:
     gocyclo:
