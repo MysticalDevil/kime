@@ -38,24 +38,24 @@ type LimitWindow struct {
 // ---------- GetSubscription ----------
 
 type GetSubscriptionResponse struct {
-	Subscription       Subscription `json:"subscription"`
-	Balances           []Balance    `json:"balances"`
-	Subscribed         bool         `json:"subscribed"`
+	Subscription         Subscription `json:"subscription"`
+	Balances             []Balance    `json:"balances"`
+	Subscribed           bool         `json:"subscribed"`
 	PurchaseSubscription Subscription `json:"purchaseSubscription"`
-	Capabilities       []Capability `json:"capabilities"`
+	Capabilities         []Capability `json:"capabilities"`
 }
 
 type Subscription struct {
-	SubscriptionID   string    `json:"subscriptionId"`
-	Goods            Goods     `json:"goods"`
-	SubscriptionTime string    `json:"subscriptionTime"`
-	CurrentStartTime string    `json:"currentStartTime"`
-	CurrentEndTime   string    `json:"currentEndTime"`
-	NextBillingTime  string    `json:"nextBillingTime"`
-	Status           string    `json:"status"`
-	PaymentChannel   string    `json:"paymentChannel"`
-	Type             string    `json:"type"`
-	Active           bool      `json:"active"`
+	SubscriptionID   string `json:"subscriptionId"`
+	Goods            Goods  `json:"goods"`
+	SubscriptionTime string `json:"subscriptionTime"`
+	CurrentStartTime string `json:"currentStartTime"`
+	CurrentEndTime   string `json:"currentEndTime"`
+	NextBillingTime  string `json:"nextBillingTime"`
+	Status           string `json:"status"`
+	PaymentChannel   string `json:"paymentChannel"`
+	Type             string `json:"type"`
+	Active           bool   `json:"active"`
 }
 
 type Goods struct {

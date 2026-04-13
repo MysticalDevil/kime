@@ -27,7 +27,7 @@ func cachePath() string {
 
 func ensureDir() error {
 	dir := cacheDir()
-	return os.MkdirAll(dir, 0755)
+	return os.MkdirAll(dir, 0o755)
 }
 
 // Load reads cache file, returns nil if not exists or expired
@@ -71,7 +71,7 @@ func Save(data json.RawMessage) error {
 	if err != nil {
 		return err
 	}
-	return os.WriteFile(cachePath(), b, 0644)
+	return os.WriteFile(cachePath(), b, 0o644)
 }
 
 // Clear removes cache file
