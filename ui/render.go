@@ -231,22 +231,30 @@ func buildCapabilityTable(caps []api.Capability, tr *i18n.I18n) string {
 
 func featureName(feature string, tr *i18n.I18n) string {
 	// Keep feature names bilingual; if no mapping, return raw value
-	mapping := map[string]string{
-		"FEATURE_AGENT":         "Agent",
-		"FEATURE_WEBSITES":      tr.T("feature_websites"),
-		"FEATURE_DOCUMENTS":     tr.T("feature_documents"),
-		"FEATURE_SLIDES":        tr.T("feature_slides"),
-		"FEATURE_SHEETS":        tr.T("feature_sheets"),
-		"FEATURE_DEEP_RESEARCH": "Deep Research",
-		"FEATURE_CODING":        tr.T("feature_coding"),
-		"FEATURE_CHAT":          tr.T("feature_chat"),
-		"FEATURE_CLAW":          "KimiClaw",
-		"FEATURE_SWARM":         "Swarm",
+	switch feature {
+	case "FEATURE_AGENT":
+		return "Agent"
+	case "FEATURE_WEBSITES":
+		return tr.T("feature_websites")
+	case "FEATURE_DOCUMENTS":
+		return tr.T("feature_documents")
+	case "FEATURE_SLIDES":
+		return tr.T("feature_slides")
+	case "FEATURE_SHEETS":
+		return tr.T("feature_sheets")
+	case "FEATURE_DEEP_RESEARCH":
+		return "Deep Research"
+	case "FEATURE_CODING":
+		return tr.T("feature_coding")
+	case "FEATURE_CHAT":
+		return tr.T("feature_chat")
+	case "FEATURE_CLAW":
+		return "KimiClaw"
+	case "FEATURE_SWARM":
+		return "Swarm"
+	default:
+		return feature
 	}
-	if v, ok := mapping[feature]; ok && v != "" {
-		return v
-	}
-	return feature
 }
 
 func renderProgressBar(remainingStr, limitStr string, width int) string {
