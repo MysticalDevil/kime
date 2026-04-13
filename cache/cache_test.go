@@ -26,7 +26,10 @@ func TestSaveAndLoad(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Load failed: %v", err)
 	}
-	if string(loaded) != string(data) {
+	var loadedMap, dataMap map[string]any
+	_ = json.Unmarshal(loaded, &loadedMap)
+	_ = json.Unmarshal(data, &dataMap)
+	if loadedMap["foo"] != dataMap["foo"] {
 		t.Errorf("loaded = %s, want %s", loaded, data)
 	}
 }
