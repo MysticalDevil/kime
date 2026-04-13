@@ -157,6 +157,10 @@ func buildUsageCard(title string, detail api.UsageDetail, extra string, tr *i18n
 }
 
 func buildSubscriptionBox(sub *api.GetSubscriptionResponse, tr *i18n.I18n) string {
+	if sub == nil {
+		return boxStyle.Render(tr.T("no_data"))
+	}
+
 	var content strings.Builder
 
 	planName := sub.Subscription.Goods.Title
