@@ -3,7 +3,6 @@ package ui
 
 import (
 	"fmt"
-	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -11,7 +10,6 @@ import (
 	"github.com/MysticalDevil/kime/api"
 	"github.com/MysticalDevil/kime/i18n"
 	"github.com/charmbracelet/lipgloss"
-	"github.com/charmbracelet/x/term"
 )
 
 var (
@@ -21,10 +19,11 @@ var (
 			MarginLeft(2).
 			MarginBottom(0)
 
-	cardBaseStyle = lipgloss.NewStyle().
+	cardStyle = lipgloss.NewStyle().
 			Border(lipgloss.RoundedBorder()).
 			BorderForeground(lipgloss.Color("#5B5B5B")).
-			Padding(0, 1)
+			Padding(0, 1).
+			Width(30)
 
 	cardTitleStyle = lipgloss.NewStyle().
 			Bold(true).
@@ -140,7 +139,7 @@ func buildUsageCard(title string, detail api.UsageDetail, extra string, tr *i18n
 
 	if detail.Limit == "" {
 		content.WriteString(cardLabelStyle.Render(tr.T("no_data")))
-		return cardBaseStyle.Width(cardWidth()).Render(content.String())
+		return cardStyle.Render(content.String())
 	}
 
 	if showProgress {
@@ -172,7 +171,7 @@ func buildUsageCard(title string, detail api.UsageDetail, extra string, tr *i18n
 		)
 	}
 
-	return cardBaseStyle.Width(cardWidth()).Render(content.String())
+	return cardStyle.Render(content.String())
 }
 
 func buildSubscriptionBox(sub *api.GetSubscriptionResponse, tr *i18n.I18n) string {
@@ -302,25 +301,4 @@ func renderProgressBar(remainingStr, limitStr string, width int) string {
 		progressEmptyStyle.Render(strings.Repeat("░", empty))
 
 	return fmt.Sprintf("%s  %.0f%%", bar, ratio*100)
-}
-
-func cardWidth() int {
-	const defaultWidth = 30
-
-	w, _, err := term.GetSize(os.Stdout.Fd())
-	if err != nil {
-		return defaultWidth
-	}
-	// Two cards side-by-side with a single space gap: (w-1)/2
-	// Ensure a reasonable minimum so the card doesn't collapse.
-	calculated := (w - 1) / 2
-	if calculated < 20 {
-		if w < defaultWidth {
-			return w - 2
-		}
-
-		return defaultWidth
-	}
-
-	return calculated
 }
