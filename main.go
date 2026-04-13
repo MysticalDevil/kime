@@ -2,6 +2,7 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -36,15 +37,17 @@ func main() {
 		os.Exit(1)
 	}
 
+	ctx := context.Background()
+
 	// 1. Real-time request: weekly usage + rate limit
-	usages, err := client.GetUsages("FEATURE_CODING")
+	usages, err := client.GetUsages(ctx, "FEATURE_CODING")
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%s: %v\n", tr.T("fetch_usage_failed"), err)
 		os.Exit(1)
 	}
 
 	// 2. Cache strategy: my benefits + model permissions (7 days TTL)
-	sub, err := loadSubscription(client, tr)
+	sub, err := loadSubscription(ctx, client, tr)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%s: %v\n", tr.T("fetch_sub_failed"), err)
 		os.Exit(1)
@@ -60,9 +63,9 @@ func main() {
 	fmt.Println(output)
 }
 
-func loadSubscription(client *api.Client, tr *i18n.I18n) (*api.GetSubscriptionResponse, error) {
+func loadSubscription(ctx context.Context, client *api.Client, tr *i18n.I18n) (*api.GetSubscriptionResponse, error) {
 	if api.IsMock() {
-		return client.GetSubscription()
+		return client.GetSubscription(ctx)
 	}
 
 	cachedData, err := cache.Load(7 * 24 * time.Hour)
@@ -79,7 +82,7 @@ func loadSubscription(client *api.Client, tr *i18n.I18n) (*api.GetSubscriptionRe
 		return sub, nil
 	}
 
-	sub, err := client.GetSubscription()
+	sub, err := client.GetSubscription(ctx)
 	if err != nil {
 		return nil, err
 	}

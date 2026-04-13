@@ -2,6 +2,7 @@
 package api
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -115,7 +116,7 @@ func IsMock() bool {
 }
 
 // GetUsages fetches weekly usage and rate limits for the given scope.
-func (c *Client) GetUsages(scope string) (*GetUsagesResponse, error) {
+func (c *Client) GetUsages(ctx context.Context, scope string) (*GetUsagesResponse, error) {
 	if IsMock() {
 		var resp GetUsagesResponse
 		if err := json.Unmarshal([]byte(mockUsagesJSON()), &resp); err != nil {
@@ -127,7 +128,7 @@ func (c *Client) GetUsages(scope string) (*GetUsagesResponse, error) {
 
 	url := BaseURL + "/apiv2/kimi.gateway.billing.v1.BillingService/GetUsages"
 
-	body, err := c.doJSON("POST", url, GetUsagesRequest{Scope: []string{scope}}, map[string]string{
+	body, err := c.doJSON(ctx, "POST", url, GetUsagesRequest{Scope: []string{scope}}, map[string]string{
 		"connect-protocol-version": "1",
 	})
 	if err != nil {
@@ -143,7 +144,7 @@ func (c *Client) GetUsages(scope string) (*GetUsagesResponse, error) {
 }
 
 // GetSubscription fetches subscription, balances and capabilities.
-func (c *Client) GetSubscription() (*GetSubscriptionResponse, error) {
+func (c *Client) GetSubscription(ctx context.Context) (*GetSubscriptionResponse, error) {
 	if IsMock() {
 		var resp GetSubscriptionResponse
 		if err := json.Unmarshal([]byte(mockSubscriptionJSON), &resp); err != nil {
@@ -155,7 +156,7 @@ func (c *Client) GetSubscription() (*GetSubscriptionResponse, error) {
 
 	url := BaseURL + "/apiv2/kimi.gateway.membership.v2.MembershipService/GetSubscription"
 
-	body, err := c.doJSON("POST", url, struct{}{}, map[string]string{
+	body, err := c.doJSON(ctx, "POST", url, struct{}{}, map[string]string{
 		"connect-protocol-version": "1",
 	})
 	if err != nil {

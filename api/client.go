@@ -113,7 +113,7 @@ func fillFromJWT(token, deviceID, sessionID, trafficID string) (string, string, 
 	return deviceID, sessionID, trafficID
 }
 
-func (c *Client) doJSON(method, url string, body any, headers map[string]string) (data []byte, err error) {
+func (c *Client) doJSON(ctx context.Context, method, url string, body any, headers map[string]string) (data []byte, err error) {
 	var bodyReader io.Reader
 
 	if body != nil {
@@ -125,7 +125,7 @@ func (c *Client) doJSON(method, url string, body any, headers map[string]string)
 		bodyReader = bytes.NewReader(b)
 	}
 
-	req, rerr := http.NewRequestWithContext(context.Background(), method, url, bodyReader)
+	req, rerr := http.NewRequestWithContext(ctx, method, url, bodyReader)
 	if rerr != nil {
 		return nil, rerr
 	}
