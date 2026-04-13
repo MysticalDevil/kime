@@ -67,6 +67,10 @@ var (
 
 	progressFilledStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("#00D26A"))
 	progressEmptyStyle  = lipgloss.NewStyle().Foreground(lipgloss.Color("#5B5B5B"))
+
+	planNameStyle = lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("#00D26A"))
+	dateStyle     = lipgloss.NewStyle().Foreground(lipgloss.Color("#FFFFFF"))
+	ratioStyle    = lipgloss.NewStyle().Foreground(lipgloss.Color("#FF6B6B"))
 )
 
 // Render builds the terminal UI from API responses.
@@ -183,14 +187,14 @@ func buildSubscriptionBox(sub *api.GetSubscriptionResponse, tr *i18n.I18n) strin
 
 	fmt.Fprintf(&content, "%s  %s\n",
 		cardLabelStyle.Render(tr.T("current_plan")),
-		lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("#00D26A")).Render(planName),
+		planNameStyle.Render(planName),
 	)
 
 	endTime := api.ParseTime(sub.Subscription.CurrentEndTime)
 	if !endTime.IsZero() {
 		fmt.Fprintf(&content, "%s  %s\n",
 			cardLabelStyle.Render(tr.T("valid_until")),
-			lipgloss.NewStyle().Foreground(lipgloss.Color("#FFFFFF")).Render(endTime.Format("2006-01-02")),
+			dateStyle.Render(endTime.Format("2006-01-02")),
 		)
 	}
 
@@ -199,7 +203,7 @@ func buildSubscriptionBox(sub *api.GetSubscriptionResponse, tr *i18n.I18n) strin
 		ratio := b.AmountUsedRatio * 100
 		fmt.Fprintf(&content, "%s  %s",
 			cardLabelStyle.Render(tr.T("usage_ratio")),
-			lipgloss.NewStyle().Foreground(lipgloss.Color("#FF6B6B")).Render(fmt.Sprintf("%.2f%%", ratio)),
+			ratioStyle.Render(fmt.Sprintf("%.2f%%", ratio)),
 		)
 	}
 
