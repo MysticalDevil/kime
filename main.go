@@ -1,3 +1,4 @@
+// kime is a CLI tool to display Kimi Code Console stats.
 package main
 
 import (

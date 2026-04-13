@@ -10,6 +10,7 @@ import (
 	"strings"
 )
 
+// Config holds user credentials and preferences.
 type Config struct {
 	Token        string `json:"token"`
 	DeviceID     string `json:"device_id"`

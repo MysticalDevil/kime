@@ -106,6 +106,7 @@ func isMock() bool {
 	return os.Getenv("KIME_MOCK") != "" && os.Getenv("KIME_MOCK") != "0"
 }
 
+// GetUsages fetches weekly usage and rate limits.
 func (c *Client) GetUsages() (*GetUsagesResponse, error) {
 	if isMock() {
 		var resp GetUsagesResponse
@@ -129,6 +130,7 @@ func (c *Client) GetUsages() (*GetUsagesResponse, error) {
 	return &resp, nil
 }
 
+// GetSubscription fetches subscription, balances and capabilities.
 func (c *Client) GetSubscription() (*GetSubscriptionResponse, error) {
 	if isMock() {
 		var resp GetSubscriptionResponse

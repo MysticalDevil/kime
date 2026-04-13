@@ -65,6 +65,7 @@ var (
 			PaddingRight(1)
 )
 
+// Render builds the terminal UI from API responses.
 func Render(usages *api.GetUsagesResponse, sub *api.GetSubscriptionResponse, tr *i18n.I18n, showProgress bool) string {
 	var sb strings.Builder
 

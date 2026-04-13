@@ -3,6 +3,7 @@ package i18n
 
 import "fmt"
 
+// I18n provides bilingual translations.
 type I18n struct {
 	Lang string
 }
@@ -70,6 +71,7 @@ var translations = map[string]map[string]string{
 	},
 }
 
+// New creates an I18n instance for the given language.
 func New(lang string) *I18n {
 	if lang != "zh" && lang != "en" {
 		lang = "zh"
@@ -77,6 +79,7 @@ func New(lang string) *I18n {
 	return &I18n{Lang: lang}
 }
 
+// T returns the translated string for key, optionally formatting args.
 func (i *I18n) T(key string, args ...any) string {
 	s, ok := translations[i.Lang][key]
 	if !ok {

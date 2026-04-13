@@ -11,6 +11,7 @@ import (
 
 const cacheFileName = "membership.json"
 
+// MembershipCache wraps subscription data with a timestamp.
 type MembershipCache struct {
 	CachedAt string          `json:"cached_at"`
 	Data     json.RawMessage `json:"data"`
@@ -83,6 +84,7 @@ func Clear() error {
 	return os.Remove(path)
 }
 
+// Info returns the cache file path for debugging.
 func Info() string {
 	return fmt.Sprintf("cache path: %s", cachePath())
 }
