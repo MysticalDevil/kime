@@ -65,21 +65,14 @@ func Save(cfg *Config) error {
 	return os.WriteFile(configPath(), b, 0o600)
 }
 
-// ExtractJWTClaims extracts fields from JWT payload without verifying signature
+// ExtractJWTClaims extracts fields from JWT payload without verifying signature.
 func ExtractJWTClaims(token string) (map[string]string, error) {
 	parts := strings.Split(token, ".")
 	if len(parts) != 3 {
 		return nil, fmt.Errorf("invalid jwt")
 	}
-	payload := parts[1]
-	padding := 4 - len(payload)%4
-	if padding != 4 {
-		payload += strings.Repeat("=", padding)
-	}
-	payload = strings.ReplaceAll(payload, "-", "+")
-	payload = strings.ReplaceAll(payload, "_", "/")
 
-	b, err := base64.StdEncoding.DecodeString(payload)
+	b, err := base64.RawURLEncoding.DecodeString(parts[1])
 	if err != nil {
 		return nil, err
 	}
