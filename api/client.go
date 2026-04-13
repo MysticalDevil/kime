@@ -3,19 +3,23 @@ package api
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/MysticalDevil/kime/config"
 )
 
+// BaseURL is the Kimi Code Console API endpoint.
 const (
 	BaseURL = "https://www.kimi.com"
 )
 
+// Client is an HTTP client for the Kimi Code Console backend.
 type Client struct {
 	hc        *http.Client
 	token     string
@@ -24,17 +28,29 @@ type Client struct {
 	trafficID string
 }
 
+// NewClient creates a Client using config file, environment variables or JWT claims.
 func NewClient() (*Client, error) {
-	// 1. Try to load config file
-	cfg, err := config.Load()
+	token, deviceID, sessionID, trafficID, err := resolveCredentials()
 	if err != nil {
-		return nil, fmt.Errorf("failed to load config: %w", err)
+		return nil, err
 	}
 
-	token := ""
-	deviceID := ""
-	sessionID := ""
-	trafficID := ""
+	return &Client{
+		hc: &http.Client{
+			Timeout: 30 * time.Second,
+		},
+		token:     token,
+		deviceID:  deviceID,
+		sessionID: sessionID,
+		trafficID: trafficID,
+	}, nil
+}
+
+func resolveCredentials() (token, deviceID, sessionID, trafficID string, err error) {
+	cfg, err := config.Load()
+	if err != nil {
+		return "", "", "", "", fmt.Errorf("failed to load config: %w", err)
+	}
 
 	if cfg != nil && cfg.Token != "" {
 		token = cfg.Token
@@ -43,57 +59,55 @@ func NewClient() (*Client, error) {
 		trafficID = cfg.UserID
 	}
 
-	// 2. Fall back to environment variables
-	if token == "" {
-		token = os.Getenv("KIME_TOKEN")
-	}
-	if deviceID == "" {
-		deviceID = os.Getenv("KIME_DEVICE_ID")
-	}
-	if sessionID == "" {
-		sessionID = os.Getenv("KIME_SESSION_ID")
-	}
-	if trafficID == "" {
-		trafficID = os.Getenv("KIME_USER_ID")
-	}
+	token = firstNonEmpty(token, os.Getenv("KIME_TOKEN"))
+	deviceID = firstNonEmpty(deviceID, os.Getenv("KIME_DEVICE_ID"))
+	sessionID = firstNonEmpty(sessionID, os.Getenv("KIME_SESSION_ID"))
+	trafficID = firstNonEmpty(trafficID, os.Getenv("KIME_USER_ID"))
 
 	if token == "" {
-		return nil, fmt.Errorf("no auth token found, please set KIME_TOKEN env or create config")
+		return "", "", "", "", fmt.Errorf("no auth token found, please set KIME_TOKEN env or create config")
 	}
 
-	// 3. Try to extract missing fields from JWT payload
-	if deviceID == "" || sessionID == "" || trafficID == "" {
-		claims, err := config.ExtractJWTClaims(token)
-		if err == nil {
-			if deviceID == "" {
-				deviceID = claims["device_id"]
-			}
-			if sessionID == "" {
-				sessionID = claims["ssid"]
-			}
-			if trafficID == "" {
-				trafficID = claims["sub"]
-			}
-		}
-	}
+	deviceID, sessionID, trafficID = fillFromJWT(token, deviceID, sessionID, trafficID)
 
 	if deviceID == "" {
-		return nil, fmt.Errorf("device_id not found, please set KIME_DEVICE_ID or ensure JWT contains device_id")
+		return "", "", "", "", fmt.Errorf("device_id not found, please set KIME_DEVICE_ID or ensure JWT contains device_id")
 	}
 	if trafficID == "" {
-		return nil, fmt.Errorf("user_id not found, please set KIME_USER_ID or ensure JWT contains sub")
+		return "", "", "", "", fmt.Errorf("user_id not found, please set KIME_USER_ID or ensure JWT contains sub")
 	}
 	if sessionID == "" {
 		sessionID = "0"
 	}
 
-	return &Client{
-		hc:        &http.Client{},
-		token:     token,
-		deviceID:  deviceID,
-		sessionID: sessionID,
-		trafficID: trafficID,
-	}, nil
+	return token, deviceID, sessionID, trafficID, nil
+}
+
+func firstNonEmpty(a, b string) string {
+	if a != "" {
+		return a
+	}
+	return b
+}
+
+func fillFromJWT(token, deviceID, sessionID, trafficID string) (string, string, string) {
+	if deviceID != "" && sessionID != "" && trafficID != "" {
+		return deviceID, sessionID, trafficID
+	}
+	claims, err := config.ExtractJWTClaims(token)
+	if err != nil {
+		return deviceID, sessionID, trafficID
+	}
+	if deviceID == "" {
+		deviceID = claims["device_id"]
+	}
+	if sessionID == "" {
+		sessionID = claims["ssid"]
+	}
+	if trafficID == "" {
+		trafficID = claims["sub"]
+	}
+	return deviceID, sessionID, trafficID
 }
 
 func (c *Client) doJSON(method, url string, body any, headers map[string]string) (data []byte, err error) {
@@ -106,7 +120,7 @@ func (c *Client) doJSON(method, url string, body any, headers map[string]string)
 		bodyReader = bytes.NewReader(b)
 	}
 
-	req, rerr := http.NewRequest(method, url, bodyReader)
+	req, rerr := http.NewRequestWithContext(context.Background(), method, url, bodyReader)
 	if rerr != nil {
 		return nil, rerr
 	}
