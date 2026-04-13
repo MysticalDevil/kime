@@ -8,7 +8,6 @@ repos:
     rev: v0.5.1
     hooks:
       - id: gofumpt
-      - id: go-vet
   - repo: local
     hooks:
       - id: golangci-lint-fix
