@@ -3,6 +3,7 @@ package api
 
 import (
 	"bytes"
+	"cmp"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -54,10 +55,10 @@ func resolveCredentials(cfg *config.Config) (token, deviceID, sessionID, traffic
 		trafficID = cfg.UserID
 	}
 
-	token = firstNonEmpty(token, os.Getenv("KIME_TOKEN"))
-	deviceID = firstNonEmpty(deviceID, os.Getenv("KIME_DEVICE_ID"))
-	sessionID = firstNonEmpty(sessionID, os.Getenv("KIME_SESSION_ID"))
-	trafficID = firstNonEmpty(trafficID, os.Getenv("KIME_USER_ID"))
+	token = cmp.Or(token, os.Getenv("KIME_TOKEN"))
+	deviceID = cmp.Or(deviceID, os.Getenv("KIME_DEVICE_ID"))
+	sessionID = cmp.Or(sessionID, os.Getenv("KIME_SESSION_ID"))
+	trafficID = cmp.Or(trafficID, os.Getenv("KIME_USER_ID"))
 
 	if token == "" {
 		return "", "", "", "", fmt.Errorf("no auth token found, please set KIME_TOKEN env or create config")
@@ -78,14 +79,6 @@ func resolveCredentials(cfg *config.Config) (token, deviceID, sessionID, traffic
 	}
 
 	return token, deviceID, sessionID, trafficID, nil
-}
-
-func firstNonEmpty(a, b string) string {
-	if a != "" {
-		return a
-	}
-
-	return b
 }
 
 func fillFromJWT(token, deviceID, sessionID, trafficID string) (string, string, string) {

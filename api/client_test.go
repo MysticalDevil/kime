@@ -10,16 +10,6 @@ import (
 	"github.com/MysticalDevil/kime/config"
 )
 
-func TestFirstNonEmpty(t *testing.T) {
-	if got := firstNonEmpty("a", "b"); got != "a" {
-		t.Errorf("firstNonEmpty(a,b) = %q, want a", got)
-	}
-
-	if got := firstNonEmpty("", "b"); got != "b" {
-		t.Errorf("firstNonEmpty(\"\",b) = %q, want b", got)
-	}
-}
-
 func TestFillFromJWT(t *testing.T) {
 	claims := map[string]any{"device_id": "d123", "ssid": "s456", "sub": "u789"}
 	payload, _ := json.Marshal(claims)
