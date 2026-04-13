@@ -1,5 +1,9 @@
 # kime
 
+[![Go](https://img.shields.io/badge/Go-1.22%2B-00ADD8?logo=go)](https://go.dev)
+[![Kimi](https://img.shields.io/badge/Kimi-Code%20Console-5B5B5B)](https://www.kimi.com/code)
+[![License](https://img.shields.io/badge/License-BSD--3--Clause-blue)](./LICENSE)
+
 一个在终端中展示 **Kimi Code 控制台** 数据的精美 CLI 工具。
 
 ---

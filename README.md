@@ -1,8 +1,10 @@
 # kime
 
-A beautiful CLI tool to display your **Kimi Code Console** stats in the terminal.
+[![Go](https://img.shields.io/badge/Go-1.22%2B-00ADD8?logo=go)](https://go.dev)
+[![Kimi](https://img.shields.io/badge/Kimi-Code%20Console-5B5B5B)](https://www.kimi.com/code)
+[![License](https://img.shields.io/badge/License-BSD--3--Clause-blue)](./LICENSE)
 
-![demo](https://raw.githubusercontent.com/MysticalDevil/kime/main/assets/demo.png)
+A beautiful CLI tool to display your **Kimi Code Console** stats in the terminal.
 
 ---
 
