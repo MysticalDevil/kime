@@ -1,3 +1,4 @@
+// Package api provides an HTTP client for the Kimi Code Console backend.
 package api
 
 import (
@@ -95,19 +96,19 @@ func NewClient() (*Client, error) {
 	}, nil
 }
 
-func (c *Client) doJSON(method, url string, body any, headers map[string]string) ([]byte, error) {
+func (c *Client) doJSON(method, url string, body any, headers map[string]string) (data []byte, err error) {
 	var bodyReader io.Reader
 	if body != nil {
-		b, err := json.Marshal(body)
-		if err != nil {
-			return nil, err
+		b, merr := json.Marshal(body)
+		if merr != nil {
+			return nil, merr
 		}
 		bodyReader = bytes.NewReader(b)
 	}
 
-	req, err := http.NewRequest(method, url, bodyReader)
-	if err != nil {
-		return nil, err
+	req, rerr := http.NewRequest(method, url, bodyReader)
+	if rerr != nil {
+		return nil, rerr
 	}
 
 	req.Header.Set("authorization", "Bearer "+c.token)
@@ -130,13 +131,17 @@ func (c *Client) doJSON(method, url string, body any, headers map[string]string)
 		req.Header.Set(k, v)
 	}
 
-	resp, err := c.hc.Do(req)
-	if err != nil {
-		return nil, err
+	resp, rerr := c.hc.Do(req)
+	if rerr != nil {
+		return nil, rerr
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if cerr := resp.Body.Close(); cerr != nil && err == nil {
+			err = cerr
+		}
+	}()
 
-	data, err := io.ReadAll(resp.Body)
+	data, err = io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
 	}

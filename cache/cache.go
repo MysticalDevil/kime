@@ -1,3 +1,4 @@
+// Package cache handles local file caching for subscription data.
 package cache
 
 import (
@@ -41,7 +42,7 @@ func Load(ttl time.Duration) (json.RawMessage, error) {
 	}
 
 	var cache MembershipCache
-	if err := json.Unmarshal(b, &cache); err != nil {
+	if err = json.Unmarshal(b, &cache); err != nil {
 		return nil, err
 	}
 
@@ -62,11 +63,11 @@ func Save(data json.RawMessage) error {
 	if err := ensureDir(); err != nil {
 		return err
 	}
-	cache := MembershipCache{
+	mc := MembershipCache{
 		CachedAt: time.Now().Format(time.RFC3339),
 		Data:     data,
 	}
-	b, err := json.MarshalIndent(cache, "", "  ")
+	b, err := json.MarshalIndent(mc, "", "  ")
 	if err != nil {
 		return err
 	}

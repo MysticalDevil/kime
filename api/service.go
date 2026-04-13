@@ -1,3 +1,4 @@
+// Package api provides Kimi Code Console API service wrappers.
 package api
 
 import (

@@ -1,3 +1,4 @@
+// Package i18n provides bilingual translations (zh/en) for CLI output.
 package i18n
 
 import "fmt"

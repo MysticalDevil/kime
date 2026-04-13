@@ -1,3 +1,4 @@
+// Package ui renders the terminal UI using Lipgloss.
 package ui
 
 import (
@@ -121,30 +122,27 @@ func buildUsageCard(title string, detail api.UsageDetail, extra string, tr *i18n
 		return cardStyle.Render(content.String())
 	}
 
-	content.WriteString(fmt.Sprintf("%s  %s",
+	fmt.Fprintf(&content, "%s  %s",
 		cardLabelStyle.Render(tr.T("remaining_total")),
 		cardValueStyle.Render(fmt.Sprintf("%s / %s", detail.Remaining, detail.Limit)),
-	))
+	)
 
 	if extra != "" {
-		content.WriteString(fmt.Sprintf("\n%s  %s",
+		fmt.Fprintf(&content, "\n%s  %s",
 			cardLabelStyle.Render(tr.T("window")),
 			cardValueStyle.Render(extra),
-		))
+		)
 	} else {
 		content.WriteString("\n")
 	}
 
 	reset := api.ParseTime(detail.ResetTime)
 	if !reset.IsZero() {
-		hours := int(time.Until(reset).Hours())
-		if hours < 0 {
-			hours = 0
-		}
-		content.WriteString(fmt.Sprintf("\n%s  %s",
+		hours := max(int(time.Until(reset).Hours()), 0)
+		fmt.Fprintf(&content, "\n%s  %s",
 			cardLabelStyle.Render(tr.T("reset_time")),
 			cardValueStyle.Render(tr.T("hours_later", hours)),
-		))
+		)
 	}
 
 	return cardStyle.Render(content.String())
@@ -158,26 +156,26 @@ func buildSubscriptionBox(sub *api.GetSubscriptionResponse, tr *i18n.I18n) strin
 		planName = tr.T("unknown_plan")
 	}
 
-	content.WriteString(fmt.Sprintf("%s  %s\n",
+	fmt.Fprintf(&content, "%s  %s\n",
 		cardLabelStyle.Render(tr.T("current_plan")),
 		lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("#00D26A")).Render(planName),
-	))
+	)
 
 	endTime := api.ParseTime(sub.Subscription.CurrentEndTime)
 	if !endTime.IsZero() {
-		content.WriteString(fmt.Sprintf("%s  %s\n",
+		fmt.Fprintf(&content, "%s  %s\n",
 			cardLabelStyle.Render(tr.T("valid_until")),
 			lipgloss.NewStyle().Foreground(lipgloss.Color("#FFFFFF")).Render(endTime.Format("2006-01-02")),
-		))
+		)
 	}
 
 	if len(sub.Balances) > 0 {
 		b := sub.Balances[0]
 		ratio := b.AmountUsedRatio * 100
-		content.WriteString(fmt.Sprintf("%s  %s",
+		fmt.Fprintf(&content, "%s  %s",
 			cardLabelStyle.Render(tr.T("usage_ratio")),
 			lipgloss.NewStyle().Foreground(lipgloss.Color("#FF6B6B")).Render(fmt.Sprintf("%.2f%%", ratio)),
-		))
+		)
 	}
 
 	return boxStyle.Render(content.String())

@@ -1,3 +1,4 @@
+// Package config manages the user configuration file.
 package config
 
 import (

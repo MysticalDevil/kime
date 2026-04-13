@@ -63,7 +63,7 @@ func main() {
 
 		if cachedData != nil {
 			sub = &api.GetSubscriptionResponse{}
-			if err := json.Unmarshal(cachedData, sub); err != nil {
+			if err = json.Unmarshal(cachedData, sub); err != nil {
 				fmt.Fprintf(os.Stderr, "%s: %v\n", tr.T("parse_cache_failed"), err)
 				os.Exit(1)
 			}
