@@ -89,7 +89,7 @@ func Save(data json.RawMessage) error {
 	if err != nil {
 		return err
 	}
-	return os.WriteFile(path, b, 0o644)
+	return os.WriteFile(path, b, 0o600)
 }
 
 // Clear removes cache file.
