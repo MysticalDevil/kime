@@ -1,8 +1,13 @@
-# kime
+<h1 align="center">kime</h1>
 
-[![Go](https://img.shields.io/badge/Go-1.22%2B-00ADD8?logo=go)](https://go.dev)
-[![Kimi](https://img.shields.io/badge/Kimi-Code%20Console-5B5B5B)](https://www.kimi.com/code)
-[![License](https://img.shields.io/badge/License-BSD--3--Clause-blue)](./LICENSE)
+<p align="center">
+  <a href="https://go.dev"><img src="https://img.shields.io/badge/Go-1.22%2B-00ADD8?logo=go" alt="Go"></a>
+  <a href="https://www.kimi.com/code"><img src="https://img.shields.io/badge/Kimi-Code%20Console-5B5B5B" alt="Kimi"></a>
+  <a href="./LICENSE"><img src="https://img.shields.io/badge/License-BSD--3--Clause-blue" alt="License"></a>
+</p>
+
+> [!IMPORTANT]
+> 本项目使用了 `encoding/json/v2`，编译时**必须**携带 `GOEXPERIMENT=jsonv2`。
 
 一个在终端中展示 **Kimi Code 控制台** 数据的精美 CLI 工具。
 
@@ -39,9 +44,6 @@ mise use -g ubi:MysticalDevil/kime@latest
 ```
 
 ### 源码构建
-
-> [!IMPORTANT]
-> 本项目使用了 `encoding/json/v2`，编译时**必须**携带 `GOEXPERIMENT=jsonv2`：
 
 ```bash
 git clone https://github.com/MysticalDevil/kime.git
