@@ -3,17 +3,22 @@ package api
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
+	"time"
 )
 
-var mockUsagesJSON = `{
+func mockUsagesJSON() string {
+	reset1 := time.Now().Add(7 * 24 * time.Hour).Format(time.RFC3339Nano)
+	reset2 := time.Now().Add(5 * time.Hour).Format(time.RFC3339Nano)
+	return fmt.Sprintf(`{
   "usages": [
     {
       "scope": "FEATURE_CODING",
       "detail": {
         "limit": "100",
         "remaining": "99",
-        "resetTime": "2026-04-20T11:30:45.477355Z"
+        "resetTime": %q
       },
       "limits": [
         {
@@ -24,13 +29,14 @@ var mockUsagesJSON = `{
           "detail": {
             "limit": "100",
             "remaining": "98",
-            "resetTime": "2026-04-13T18:30:45.477355Z"
+            "resetTime": %q
           }
         }
       ]
     }
   ]
-}`
+}`, reset1, reset2)
+}
 
 var mockSubscriptionJSON = `{
   "subscription": {
@@ -111,7 +117,7 @@ func IsMock() bool {
 func (c *Client) GetUsages(scope string) (*GetUsagesResponse, error) {
 	if IsMock() {
 		var resp GetUsagesResponse
-		if err := json.Unmarshal([]byte(mockUsagesJSON), &resp); err != nil {
+		if err := json.Unmarshal([]byte(mockUsagesJSON()), &resp); err != nil {
 			return nil, err
 		}
 		return &resp, nil
