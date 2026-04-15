@@ -112,7 +112,7 @@ func runCheck() {
 		os.Exit(1)
 	}
 
-	// 2. Cache strategy: my benefits + model permissions (7 days TTL)
+	// 2. Cache strategy: balances are real-time, subscription metadata is cached (30 days TTL)
 	sub, err := loadSubscription(ctx, client, tr)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%s: %v\n", tr.T("fetch_sub_failed"), err)
@@ -150,6 +150,7 @@ Environment Variables:
   KIME_USER_ID      User ID (traffic ID)
   KIME_LANG         UI language: zh, zh_TW, en, ja
   KIME_MOCK         Set to 1 to enable mock mode (no API calls)
+  KIME_FORCE_REFRESH Set to 1 to force a full refresh and update cache
 
 Build Note:
   This project requires GOEXPERIMENT=jsonv2.
@@ -157,36 +158,64 @@ Build Note:
 `, version)
 }
 
+func isForceRefresh() bool {
+	v := os.Getenv("KIME_FORCE_REFRESH")
+	return v != "" && v != "0"
+}
+
 func loadSubscription(ctx context.Context, client *api.Client, tr *i18n.I18n) (*api.GetSubscriptionResponse, error) {
-	if api.IsMock() {
-		return client.GetSubscription(ctx)
-	}
-
-	cachedData, err := cache.Load(7 * 24 * time.Hour)
-	if err != nil {
-		return nil, fmt.Errorf("%s: %w", tr.T("read_cache_failed"), err)
-	}
-
-	if cachedData != nil {
-		sub := &api.GetSubscriptionResponse{}
-		if err := jsonv2.Unmarshal(cachedData, sub); err != nil {
-			return nil, fmt.Errorf("%s: %w", tr.T("parse_cache_failed"), err)
-		}
-
-		return sub, nil
-	}
-
-	sub, err := client.GetSubscription(ctx)
+	// Always fetch live data so balances are real-time.
+	liveSub, err := client.GetSubscription(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	data, err := jsonv2.Marshal(sub)
+	if api.IsMock() {
+		return liveSub, nil
+	}
+
+	forceRefresh := isForceRefresh()
+
+	if !forceRefresh {
+		// Load cached subscription info (plan, validity, capabilities).
+		// We use a long TTL here because expiration is checked against the subscription end date.
+		cachedData, err := cache.Load(100 * 365 * 24 * time.Hour)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "%s: %v\n", tr.T("read_cache_failed"), err)
+		} else if cachedData != nil {
+			var cached api.GetSubscriptionResponse
+			if err := jsonv2.Unmarshal(cachedData, &cached); err != nil {
+				fmt.Fprintf(os.Stderr, "%s: %v\n", tr.T("parse_cache_failed"), err)
+			} else {
+				// Cache is valid until subscription.currentEndTime.
+				endTime, err := time.Parse(time.RFC3339Nano, cached.Subscription.CurrentEndTime)
+				if err == nil && time.Now().Before(endTime) {
+					// Merge: keep live balances, use cached subscription details.
+					liveSub.Subscription = cached.Subscription
+					liveSub.Subscribed = cached.Subscribed
+					liveSub.PurchaseSubscription = cached.PurchaseSubscription
+					liveSub.Capabilities = cached.Capabilities
+
+					return liveSub, nil
+				}
+			}
+		}
+	}
+
+	// Cache miss or force refresh: save subscription metadata without balances.
+	cacheSub := api.GetSubscriptionResponse{
+		Subscription:         liveSub.Subscription,
+		Subscribed:           liveSub.Subscribed,
+		PurchaseSubscription: liveSub.PurchaseSubscription,
+		Capabilities:         liveSub.Capabilities,
+	}
+
+	data, err := jsonv2.Marshal(cacheSub)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%s: %v\n", tr.T("save_cache_failed"), err)
 	} else if err := cache.Save(data); err != nil {
 		fmt.Fprintf(os.Stderr, "%s: %v\n", tr.T("save_cache_failed"), err)
 	}
 
-	return sub, nil
+	return liveSub, nil
 }
