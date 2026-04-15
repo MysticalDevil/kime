@@ -15,6 +15,7 @@ import (
 	"github.com/MysticalDevil/kime/config"
 	"github.com/MysticalDevil/kime/i18n"
 	"github.com/MysticalDevil/kime/ui"
+	"github.com/charmbracelet/lipgloss"
 )
 
 // version is set at build time via -ldflags "-X main.version=x.y.z".
@@ -130,32 +131,79 @@ func runCheck() {
 }
 
 func printHelp() {
-	fmt.Printf(`kime %s - Display your Kimi Code Console stats in the terminal.
+	var (
+		accent = lipgloss.Color("#90EE90")
+		muted  = lipgloss.Color("#A0A0A0")
+		dim    = lipgloss.Color("#5B5B5B")
+		white  = lipgloss.Color("#FAFAFA")
+	)
 
-Usage:
-  kime [command]
+	headerBox := lipgloss.NewStyle().
+		Border(lipgloss.RoundedBorder()).
+		BorderForeground(accent).
+		Padding(0, 1).
+		Width(54)
 
-Commands:
-  check           Fetch and display Kimi Code Console stats
-  init            Run interactive configuration setup
+	sectionStyle := lipgloss.NewStyle().
+		Bold(true).
+		Foreground(accent).
+		MarginTop(1).
+		MarginBottom(0)
 
-Flags:
-  -h, --help      Show this help message
-  -v, --version   Show version information
+	keyStyle := lipgloss.NewStyle().
+		Bold(true).
+		Foreground(white).
+		Width(20).
+		Align(lipgloss.Left)
 
-Environment Variables:
-  KIME_TOKEN        JWT access token
-  KIME_DEVICE_ID    Device ID header
-  KIME_SESSION_ID   Session ID header
-  KIME_USER_ID      User ID (traffic ID)
-  KIME_LANG         UI language: zh, zh_TW, en, ja
-  KIME_MOCK         Set to 1 to enable mock mode (no API calls)
-  KIME_FORCE_REFRESH Set to 1 to force a full refresh and update cache
+	valStyle := lipgloss.NewStyle().
+		Foreground(muted)
 
-Build Note:
-  This project requires GOEXPERIMENT=jsonv2.
+	// Header
+	title := lipgloss.NewStyle().Bold(true).Foreground(white).Render("🌙 kime " + version)
+	subtitle := valStyle.Render("Display your Kimi Code Console stats in the terminal.")
+	fmt.Println(headerBox.Render(lipgloss.JoinVertical(lipgloss.Left, title, subtitle)))
 
-`, version)
+	// Commands
+	fmt.Println(sectionStyle.Render("Commands"))
+	fmt.Println(lipgloss.JoinHorizontal(lipgloss.Left,
+		keyStyle.MarginLeft(2).Render("check"),
+		valStyle.Render("Fetch and display Kimi Code Console stats"),
+	))
+	fmt.Println(lipgloss.JoinHorizontal(lipgloss.Left,
+		keyStyle.MarginLeft(2).Render("init"),
+		valStyle.Render("Run interactive configuration setup"),
+	))
+
+	// Flags
+	fmt.Println(sectionStyle.Render("Flags"))
+	fmt.Println(lipgloss.JoinHorizontal(lipgloss.Left,
+		keyStyle.MarginLeft(2).Render("-h, --help"),
+		valStyle.Render("Show this help message"),
+	))
+	fmt.Println(lipgloss.JoinHorizontal(lipgloss.Left,
+		keyStyle.MarginLeft(2).Render("-v, --version"),
+		valStyle.Render("Show version information"),
+	))
+
+	// Environment Variables
+	fmt.Println(sectionStyle.Render("Environment Variables"))
+
+	vars := [][2]string{
+		{"KIME_TOKEN", "JWT access token"},
+		{"KIME_DEVICE_ID", "Device ID header"},
+		{"KIME_SESSION_ID", "Session ID header"},
+		{"KIME_USER_ID", "User ID (traffic ID)"},
+		{"KIME_LANG", "UI language: zh, zh_TW, en, ja"},
+		{"KIME_MOCK", "Set to 1 to enable mock mode (no API calls)"},
+		{"KIME_FORCE_REFRESH", "Set to 1 to force a full refresh and update cache"},
+	}
+	for _, v := range vars {
+		fmt.Println(lipgloss.JoinHorizontal(lipgloss.Left, keyStyle.MarginLeft(2).Render(v[0]), valStyle.Render(v[1])))
+	}
+
+	// Footer
+	fmt.Println(lipgloss.NewStyle().Foreground(dim).MarginTop(1).Render("Build Note: This project requires GOEXPERIMENT=jsonv2."))
 }
 
 func isForceRefresh() bool {
