@@ -163,6 +163,10 @@ func isForceRefresh() bool {
 	return v != "" && v != "0"
 }
 
+func isValidSubscription(sub api.Subscription) bool {
+	return sub.Goods.Title != "" && sub.CurrentEndTime != ""
+}
+
 func loadSubscription(ctx context.Context, client *api.Client, tr *i18n.I18n) (*api.GetSubscriptionResponse, error) {
 	// Always fetch live data so balances are real-time.
 	liveSub, err := client.GetSubscription(ctx)
@@ -175,6 +179,7 @@ func loadSubscription(ctx context.Context, client *api.Client, tr *i18n.I18n) (*
 	}
 
 	forceRefresh := isForceRefresh()
+	liveValid := isValidSubscription(liveSub.Subscription) && len(liveSub.Capabilities) > 0
 
 	if !forceRefresh {
 		// Load cached subscription info (plan, validity, capabilities).
@@ -186,7 +191,7 @@ func loadSubscription(ctx context.Context, client *api.Client, tr *i18n.I18n) (*
 			var cached api.GetSubscriptionResponse
 			if err := jsonv2.Unmarshal(cachedData, &cached); err != nil {
 				fmt.Fprintf(os.Stderr, "%s: %v\n", tr.T("parse_cache_failed"), err)
-			} else {
+			} else if isValidSubscription(cached.Subscription) && len(cached.Capabilities) > 0 {
 				// Cache is valid until subscription.currentEndTime.
 				endTime, err := time.Parse(time.RFC3339Nano, cached.Subscription.CurrentEndTime)
 				if err == nil && time.Now().Before(endTime) {
@@ -202,19 +207,21 @@ func loadSubscription(ctx context.Context, client *api.Client, tr *i18n.I18n) (*
 		}
 	}
 
-	// Cache miss or force refresh: save subscription metadata without balances.
-	cacheSub := api.GetSubscriptionResponse{
-		Subscription:         liveSub.Subscription,
-		Subscribed:           liveSub.Subscribed,
-		PurchaseSubscription: liveSub.PurchaseSubscription,
-		Capabilities:         liveSub.Capabilities,
-	}
+	// Cache miss, expired, or invalid: save valid live subscription metadata without balances.
+	if liveValid {
+		cacheSub := api.GetSubscriptionResponse{
+			Subscription:         liveSub.Subscription,
+			Subscribed:           liveSub.Subscribed,
+			PurchaseSubscription: liveSub.PurchaseSubscription,
+			Capabilities:         liveSub.Capabilities,
+		}
 
-	data, err := jsonv2.Marshal(cacheSub)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "%s: %v\n", tr.T("save_cache_failed"), err)
-	} else if err := cache.Save(data); err != nil {
-		fmt.Fprintf(os.Stderr, "%s: %v\n", tr.T("save_cache_failed"), err)
+		data, err := jsonv2.Marshal(cacheSub)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "%s: %v\n", tr.T("save_cache_failed"), err)
+		} else if err := cache.Save(data); err != nil {
+			fmt.Fprintf(os.Stderr, "%s: %v\n", tr.T("save_cache_failed"), err)
+		}
 	}
 
 	return liveSub, nil

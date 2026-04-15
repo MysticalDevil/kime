@@ -81,7 +81,7 @@ func Load(ttl time.Duration) (json.RawMessage, error) {
 	return cache.Data, nil
 }
 
-// Save writes cache file.
+// Save writes cache file atomically via a temporary file + rename.
 func Save(data json.RawMessage) error {
 	if err := ensureDir(); err != nil {
 		return err
@@ -104,13 +104,12 @@ func Save(data json.RawMessage) error {
 		return err
 	}
 
-	b := buf.Bytes()
-
-	if err != nil {
+	tmpPath := path + ".tmp"
+	if err := os.WriteFile(tmpPath, buf.Bytes(), 0o600); err != nil {
 		return err
 	}
 
-	return os.WriteFile(path, b, 0o600)
+	return os.Rename(tmpPath, path)
 }
 
 // Clear removes cache file.
