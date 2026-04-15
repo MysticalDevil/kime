@@ -17,8 +17,9 @@
 
 - **本周用量** – 每次实时请求 API
 - **频限明细** – 每次实时请求 API
-- **我的权益** – 本地缓存 7 天
-- **模型权限** – 本地缓存 7 天
+- **额度使用** – 每次实时请求 API
+- **当前套餐 & 有效期** – 本地缓存到套餐有效期截止日
+- **模型权限** – 本地缓存到套餐有效期截止日
 - 使用 [Lipgloss](https://github.com/charmbracelet/lipgloss) 绘制的 Unicode 圆角边框与彩色 UI
 - 多语言输出：**简体中文（默认）**、繁体中文、英文和日文
 - Mock 模式，测试时不触发真实 API 请求
@@ -130,6 +131,7 @@ kime init
 | `KIME_USER_ID` | 用户 ID |
 | `KIME_LANG` | 界面语言：`zh`、`zh_TW`、`en`、`ja` |
 | `KIME_MOCK` | 设为 `1` 开启 Mock 模式（不请求真实 API） |
+| `KIME_FORCE_REFRESH` | 设为 `1` 强制刷新全部内容并更新缓存 |
 
 如果 `device_id` 或 `user_id` 缺失，`kime` 会自动尝试从 JWT payload 中解码提取。
 
@@ -151,6 +153,9 @@ kime check
 
 # Mock 模式（不发起网络请求）
 KIME_MOCK=1 kime check
+
+# 强制刷新（跳过缓存并重新写入）
+KIME_FORCE_REFRESH=1 kime check
 ```
 
 ---
@@ -158,8 +163,10 @@ KIME_MOCK=1 kime check
 ## 缓存
 
 - **缓存文件**: `~/.cache/kime/membership.json`
-- **有效期**: 7 天
-- "我的权益" 和 "模型权限" 在缓存有效期内直接读取本地；"本周用量" 和 "频限明细" 始终实时请求。
+- **有效期**: 到 `subscription.currentEndTime`（当前套餐有效期截止日）
+- "当前套餐"、"有效期" 和 "模型权限" 在套餐有效期内直接读取本地缓存。
+- "本周用量"、"频限明细" 和 "额度使用" 始终实时请求。
+- 设置 `KIME_FORCE_REFRESH=1` 可跳过缓存，强制全量更新。
 
 ---
 

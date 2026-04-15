@@ -17,8 +17,9 @@ A beautiful CLI tool to display your **Kimi Code Console** stats in the terminal
 
 - **Weekly Usage** – real-time API call
 - **Rate Limit Details** – real-time API call
-- **My Benefits** – cached for 7 days
-- **Model Permissions** – cached for 7 days
+- **Usage Ratio** – real-time API call
+- **Current Plan & Validity** – cached until the subscription expires
+- **Model Permissions** – cached until the subscription expires
 - Beautiful Unicode-box UI powered by [Lipgloss](https://github.com/charmbracelet/lipgloss)
 - Multilingual output: **Chinese (default)**, Traditional Chinese, English, and Japanese
 - Mock mode for safe testing without hitting real APIs
@@ -133,6 +134,7 @@ other options.
 | `KIME_USER_ID` | User ID |
 | `KIME_LANG` | UI language: `zh`, `zh_TW`, `en`, or `ja` |
 | `KIME_MOCK` | Set to `1` to enable mock mode (no real API calls) |
+| `KIME_FORCE_REFRESH` | Set to `1` to force a full refresh and update cache |
 
 If `device_id` or `user_id` is missing, `kime` will try to extract them from the JWT payload automatically.
 
@@ -153,6 +155,9 @@ KIME_LANG=en kime check   # or set "language": "en" in config
 
 # Mock mode (no network requests)
 KIME_MOCK=1 kime check
+
+# Force refresh (bypass cache and update it)
+KIME_FORCE_REFRESH=1 kime check
 ```
 
 ---
@@ -160,9 +165,10 @@ KIME_MOCK=1 kime check
 ## Cache
 
 - **Cache file**: `~/.cache/kime/membership.json`
-- **TTL**: 7 days
-- "My Benefits" and "Model Permissions" are served from cache when valid;
-  "Weekly Usage" and "Rate Limit" are always fetched live.
+- **TTL**: until `subscription.currentEndTime`
+- "Current Plan", "Validity", and "Model Permissions" are served from cache when the subscription is still active.
+- "Weekly Usage", "Rate Limit", and "Usage Ratio" are always fetched live.
+- Set `KIME_FORCE_REFRESH=1` to bypass cache and force a full update.
 
 ---
 
