@@ -69,7 +69,6 @@ var (
 
 	planNameStyle = lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("#00D26A"))
 	dateStyle     = lipgloss.NewStyle().Foreground(lipgloss.Color("#FFFFFF"))
-	ratioStyle    = lipgloss.NewStyle().Foreground(lipgloss.Color("#FF6B6B"))
 )
 
 // Render builds the terminal UI from API responses.
@@ -202,9 +201,11 @@ func buildSubscriptionBox(sub *api.GetSubscriptionResponse, tr *i18n.I18n) strin
 	if len(sub.Balances) > 0 {
 		b := sub.Balances[0]
 		ratio := b.AmountUsedRatio * 100
+		color := gradientGreenToRed(b.AmountUsedRatio)
+		style := lipgloss.NewStyle().Foreground(lipgloss.Color(color))
 		fmt.Fprintf(&content, "%s  %s",
 			cardLabelStyle.Render(tr.T("usage_ratio")),
-			ratioStyle.Render(fmt.Sprintf("%.2f%%", ratio)),
+			style.Render(fmt.Sprintf("%.2f%%", ratio)),
 		)
 	}
 
@@ -275,6 +276,24 @@ func featureName(feature string, tr *i18n.I18n) string {
 	default:
 		return feature
 	}
+}
+
+func gradientGreenToRed(ratio float64) string {
+	if ratio < 0 {
+		ratio = 0
+	}
+
+	if ratio > 1 {
+		ratio = 1
+	}
+
+	// 0% -> #00D26A (0, 210, 106)
+	// 100% -> #FF4444 (255, 68, 68)
+	r := int(0 + (255-0)*ratio)
+	g := int(210 + (68-210)*ratio)
+	b := int(106 + (68-106)*ratio)
+
+	return fmt.Sprintf("#%02X%02X%02X", r, g, b)
 }
 
 func renderProgressBar(remainingStr, limitStr string, width int) string {
