@@ -81,14 +81,14 @@ func Render(usages *api.GetUsagesResponse, sub *api.GetSubscriptionResponse, tr 
 	// --- Weekly usage & rate limit cards ---
 	var card1, card2 string
 
-	if len(usages.Usages) > 0 {
+	if usages != nil && len(usages.Usages) > 0 {
 		u := usages.Usages[0]
 
 		card1 = buildUsageCard(tr.T("weekly_usage"), u.Detail, "", tr, showProgress)
 
 		if len(u.Limits) > 0 {
 			limit := u.Limits[0]
-			windowText := formatWindow(limit.Window.Duration)
+			windowText := formatWindow(limit.Window)
 			card2 = buildUsageCard(tr.T("rate_limit"), limit.Detail, windowText, tr, showProgress)
 		} else {
 			card2 = buildUsageCard(tr.T("rate_limit"), api.UsageDetail{}, "", tr, showProgress)
@@ -122,7 +122,19 @@ func Render(usages *api.GetUsagesResponse, sub *api.GetSubscriptionResponse, tr 
 	return sb.String()
 }
 
-func formatWindow(minutes int) string {
+func formatWindow(window api.LimitWindow) string {
+	minutes := window.Duration
+	switch strings.ToUpper(window.TimeUnit) {
+	case "TIME_UNIT_SECOND":
+		minutes = (window.Duration + 59) / 60
+	case "TIME_UNIT_HOUR":
+		minutes = window.Duration * 60
+	case "TIME_UNIT_DAY":
+		minutes = window.Duration * 60 * 24
+	case "TIME_UNIT_MINUTE", "":
+		// default is already minutes
+	}
+
 	if minutes%60 == 0 {
 		return fmt.Sprintf("%dh", minutes/60)
 	}
@@ -173,6 +185,38 @@ func buildUsageCard(title string, detail api.UsageDetail, extra string, tr *i18n
 	return cardStyle.Render(content.String())
 }
 
+// selectPrimaryBalance picks the most relevant balance for display.
+// It prefers FEATURE_OMNI, then FEATURE_CODING, then the first non-expired item.
+func selectPrimaryBalance(balances []api.Balance) *api.Balance {
+	if len(balances) == 0 {
+		return nil
+	}
+
+	for i := range balances {
+		if balances[i].Feature == "FEATURE_OMNI" {
+			return &balances[i]
+		}
+	}
+
+	for i := range balances {
+		if balances[i].Feature == "FEATURE_CODING" {
+			return &balances[i]
+		}
+	}
+
+	now := time.Now()
+
+	for i := range balances {
+		if balances[i].ExpireTime != "" {
+			if et, err := time.Parse(time.RFC3339Nano, balances[i].ExpireTime); err == nil && et.After(now) {
+				return &balances[i]
+			}
+		}
+	}
+
+	return &balances[0]
+}
+
 func buildSubscriptionBox(sub *api.GetSubscriptionResponse, tr *i18n.I18n) string {
 	if sub == nil {
 		return boxStyle.Render(tr.T("no_data"))
@@ -198,8 +242,7 @@ func buildSubscriptionBox(sub *api.GetSubscriptionResponse, tr *i18n.I18n) strin
 		)
 	}
 
-	if len(sub.Balances) > 0 {
-		b := sub.Balances[0]
+	if b := selectPrimaryBalance(sub.Balances); b != nil {
 		ratio := b.AmountUsedRatio * 100
 		color := gradientGreenToRed(b.AmountUsedRatio)
 		style := lipgloss.NewStyle().Foreground(lipgloss.Color(color))
