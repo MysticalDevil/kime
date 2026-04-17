@@ -1,7 +1,7 @@
 <h1 align="center">kime</h1>
 
 <p align="center">
-  <a href="https://go.dev"><img src="https://img.shields.io/badge/Go-1.22%2B-00ADD8?logo=go" alt="Go"></a>
+  <a href="https://go.dev"><img src="https://img.shields.io/badge/Go-1.26%2B-00ADD8?logo=go" alt="Go"></a>
   <a href="https://www.kimi.com/code"><img src="https://img.shields.io/badge/Kimi-Code%20Console-5B5B5B" alt="Kimi"></a>
   <a href="./LICENSE"><img src="https://img.shields.io/badge/License-BSD--3--Clause-blue" alt="License"></a>
 </p>
@@ -227,13 +227,6 @@ $env:KIME_FORCE_REFRESH = "1"; .\kime.exe check
 - Windows target: Windows Terminal is the primary supported terminal
 - Recommended Windows shell: PowerShell 7
 - `cmd.exe` and legacy Windows consoles are not supported targets
-
-If you publish prebuilt binaries, include:
-
-- `kime_windows_amd64.zip`
-- `kime_windows_arm64.zip`
-
-After extracting, place `kime.exe` in a directory on `PATH`, or add the extraction directory to `PATH`.
 
 ---
 

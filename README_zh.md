@@ -1,7 +1,7 @@
 <h1 align="center">kime</h1>
 
 <p align="center">
-  <a href="https://go.dev"><img src="https://img.shields.io/badge/Go-1.22%2B-00ADD8?logo=go" alt="Go"></a>
+  <a href="https://go.dev"><img src="https://img.shields.io/badge/Go-1.26%2B-00ADD8?logo=go" alt="Go"></a>
   <a href="https://www.kimi.com/code"><img src="https://img.shields.io/badge/Kimi-Code%20Console-5B5B5B" alt="Kimi"></a>
   <a href="./LICENSE"><img src="https://img.shields.io/badge/License-BSD--3--Clause-blue" alt="License"></a>
 </p>
@@ -228,13 +228,6 @@ $env:KIME_FORCE_REFRESH = "1"; .\kime.exe check
 - Windows 主要支持的终端：Windows Terminal
 - Windows 推荐 Shell：PowerShell 7
 - `cmd.exe` 与旧版 Windows 控制台不在支持范围内
-
-如果发布预编译产物，建议至少提供：
-
-- `kime_windows_amd64.zip`
-- `kime_windows_arm64.zip`
-
-解压后将 `kime.exe` 放入 `PATH` 中的目录，或把解压目录加入 `PATH`。
 
 ---
 

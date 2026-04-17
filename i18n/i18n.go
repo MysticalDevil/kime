@@ -1,4 +1,4 @@
-// Package i18n provides multilingual translations (zh/en/zh_TW/ja/ko) for CLI output.
+// Package i18n provides multilingual translations (zh/en/zh_TW/ja) for CLI output.
 package i18n
 
 import (
