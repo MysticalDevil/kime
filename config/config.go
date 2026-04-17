@@ -7,6 +7,7 @@ import (
 	"encoding/base64"
 	"encoding/json/jsontext"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -25,13 +26,27 @@ type Config struct {
 	ShowProgress bool   `json:"show_progress"`
 }
 
+var (
+	configDirFunc           = defaultConfigDir
+	readPassword            = term.ReadPassword
+	stdin         io.Reader = os.Stdin
+)
+
 func configDir() (string, error) {
-	home, err := os.UserHomeDir()
+	return configDirFunc()
+}
+
+func defaultConfigDir() (string, error) {
+	if dir := strings.TrimSpace(os.Getenv("KIME_CONFIG_DIR")); dir != "" {
+		return dir, nil
+	}
+
+	base, err := os.UserConfigDir()
 	if err != nil {
 		return "", err
 	}
 
-	return filepath.Join(home, ".config", "kime"), nil
+	return filepath.Join(base, "kime"), nil
 }
 
 func configPath() (string, error) {
@@ -140,11 +155,15 @@ func ExtractJWTClaims(token string) (map[string]string, error) {
 
 // InitInteractive runs an interactive prompt to create or update the config file.
 func InitInteractive() (*Config, error) {
-	reader := bufio.NewReader(os.Stdin)
+	if !term.IsTerminal(os.Stdin.Fd()) {
+		return nil, fmt.Errorf("stdin is not a terminal; run kime init in PowerShell, Windows Terminal, or another interactive shell")
+	}
+
+	reader := bufio.NewReader(stdin)
 
 	fmt.Print("Token (hidden input): ")
 
-	tokenBytes, err := term.ReadPassword(os.Stdin.Fd())
+	tokenBytes, err := readPassword(os.Stdin.Fd())
 	if err != nil {
 		return nil, fmt.Errorf("failed to read token: %w", err)
 	}

@@ -23,9 +23,8 @@ func (f *fakeSubscriptionFetcher) GetSubscription(_ context.Context) (*api.GetSu
 }
 
 func TestLoadSubscription_FallbackToCacheOnNetworkError(t *testing.T) {
-	// Use a temporary HOME so cache does not pollute the real filesystem.
 	tmpDir := t.TempDir()
-	t.Setenv("HOME", tmpDir)
+	t.Setenv("KIME_CACHE_DIR", tmpDir)
 	t.Setenv("KIME_FORCE_REFRESH", "")
 	t.Setenv("KIME_MOCK", "")
 
@@ -65,7 +64,7 @@ func TestLoadSubscription_FallbackToCacheOnNetworkError(t *testing.T) {
 
 func TestLoadSubscription_ForceRefreshBypassesCache(t *testing.T) {
 	tmpDir := t.TempDir()
-	t.Setenv("HOME", tmpDir)
+	t.Setenv("KIME_CACHE_DIR", tmpDir)
 	t.Setenv("KIME_FORCE_REFRESH", "1")
 	t.Setenv("KIME_MOCK", "")
 

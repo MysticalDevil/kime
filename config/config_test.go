@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"strings"
 	"testing"
 )
 
@@ -44,5 +45,30 @@ func TestExtractJWTClaims_Invalid(t *testing.T) {
 	_, err := ExtractJWTClaims("invalid")
 	if err == nil {
 		t.Error("expected error for invalid jwt")
+	}
+}
+
+func TestConfigDirUsesOverride(t *testing.T) {
+	dir := t.TempDir()
+	t.Setenv("KIME_CONFIG_DIR", dir)
+
+	got, err := configDir()
+	if err != nil {
+		t.Fatalf("configDir failed: %v", err)
+	}
+
+	if got != dir {
+		t.Errorf("configDir = %q, want %q", got, dir)
+	}
+}
+
+func TestInitInteractiveRequiresTTY(t *testing.T) {
+	_, err := InitInteractive()
+	if err == nil {
+		t.Fatal("expected error when stdin is not a terminal")
+	}
+
+	if !strings.Contains(err.Error(), "stdin is not a terminal") {
+		t.Fatalf("unexpected error: %v", err)
 	}
 }

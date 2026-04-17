@@ -197,6 +197,8 @@ func printHelp() {
 		{"KIME_LANG", "UI language: zh, zh_TW, en, ja"},
 		{"KIME_MOCK", "Set to 1 to enable mock mode (no API calls)"},
 		{"KIME_FORCE_REFRESH", "Set to 1 to force a full refresh and update cache"},
+		{"KIME_CONFIG_DIR", "Override config directory path"},
+		{"KIME_CACHE_DIR", "Override cache directory path"},
 	}
 	for _, v := range vars {
 		fmt.Println(lipgloss.JoinHorizontal(lipgloss.Left, keyStyle.MarginLeft(2).Render(v[0]), valStyle.Render(v[1])))

@@ -10,71 +10,52 @@ import (
 
 func TestSaveAndLoad(t *testing.T) {
 	dir := t.TempDir()
-	// Monkey-patch cacheDir by overriding via environment if possible, but cacheDir uses os.UserHomeDir.
-	// Instead we temporarily override cachePath by writing to a known location via a test hook.
-	// Since cacheDir/cachePath are unexported, we rely on the real filesystem under a temp home.
-	origHome := os.Getenv("HOME")
-
-	if err := os.Setenv("HOME", dir); err != nil {
-		t.Fatalf("Setenv failed: %v", err)
-	}
-
-	defer func() {
-		if err := os.Setenv("HOME", origHome); err != nil {
-			t.Fatalf("Setenv failed: %v", err)
-		}
-	}()
+	t.Setenv("KIME_CACHE_DIR", dir)
 
 	data := json.RawMessage(`{"foo":"bar"}`)
 	if err := Save(data); err != nil {
 		t.Fatalf("Save failed: %v", err)
 	}
 
-	loaded, err := Load(1 * time.Hour)
+	loaded, err := Load(time.Hour)
 	if err != nil {
 		t.Fatalf("Load failed: %v", err)
 	}
 
-	var loadedMap, dataMap map[string]any
+	var loadedMap map[string]any
+	if err := json.Unmarshal(loaded, &loadedMap); err != nil {
+		t.Fatalf("unmarshal loaded cache: %v", err)
+	}
 
-	_ = json.Unmarshal(loaded, &loadedMap)
-
-	_ = json.Unmarshal(data, &dataMap)
-
-	if loadedMap["foo"] != dataMap["foo"] {
-		t.Errorf("loaded = %s, want %s", loaded, data)
+	if loadedMap["foo"] != "bar" {
+		t.Errorf("loaded foo = %v, want bar", loadedMap["foo"])
 	}
 }
 
-func TestLoad_Expired(t *testing.T) {
+func TestLoadExpired(t *testing.T) {
 	dir := t.TempDir()
-	origHome := os.Getenv("HOME")
+	t.Setenv("KIME_CACHE_DIR", dir)
 
-	if err := os.Setenv("HOME", dir); err != nil {
-		t.Fatalf("Setenv failed: %v", err)
+	path := filepath.Join(dir, cacheFileName)
+	oldCache := MembershipCache{
+		CachedAt: time.Now().Add(-2 * time.Hour).Format(time.RFC3339),
+		Data:     json.RawMessage(`{"foo":"bar"}`),
 	}
 
-	defer func() {
-		if err := os.Setenv("HOME", origHome); err != nil {
-			t.Fatalf("Setenv failed: %v", err)
-		}
-	}()
-
-	data := json.RawMessage(`{"foo":"bar"}`)
-	if err := Save(data); err != nil {
-		t.Fatalf("Save failed: %v", err)
+	b, err := json.MarshalIndent(oldCache, "", "  ")
+	if err != nil {
+		t.Fatalf("marshal old cache: %v", err)
 	}
 
-	// Set file modification time to the past by rewriting with old timestamp
-	path := filepath.Join(dir, ".cache", "kime", "membership.json")
-	oldCache := MembershipCache{CachedAt: time.Now().Add(-2 * time.Hour).Format(time.RFC3339), Data: data}
+	if err := os.MkdirAll(dir, 0o755); err != nil {
+		t.Fatalf("mkdir cache dir: %v", err)
+	}
 
-	b, _ := json.MarshalIndent(oldCache, "", "  ")
 	if err := os.WriteFile(path, b, 0o600); err != nil {
-		t.Fatalf("rewrite cache failed: %v", err)
+		t.Fatalf("write cache fixture: %v", err)
 	}
 
-	loaded, err := Load(1 * time.Hour)
+	loaded, err := Load(time.Hour)
 	if err != nil {
 		t.Fatalf("Load failed: %v", err)
 	}
@@ -84,21 +65,11 @@ func TestLoad_Expired(t *testing.T) {
 	}
 }
 
-func TestLoad_NotExist(t *testing.T) {
+func TestLoadNotExist(t *testing.T) {
 	dir := t.TempDir()
-	origHome := os.Getenv("HOME")
+	t.Setenv("KIME_CACHE_DIR", dir)
 
-	if err := os.Setenv("HOME", dir); err != nil {
-		t.Fatalf("Setenv failed: %v", err)
-	}
-
-	defer func() {
-		if err := os.Setenv("HOME", origHome); err != nil {
-			t.Fatalf("Setenv failed: %v", err)
-		}
-	}()
-
-	loaded, err := Load(1 * time.Hour)
+	loaded, err := Load(time.Hour)
 	if err != nil {
 		t.Fatalf("Load failed: %v", err)
 	}

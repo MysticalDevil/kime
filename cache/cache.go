@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	jsonv2 "encoding/json/v2"
@@ -21,13 +22,23 @@ type MembershipCache struct {
 	Data     json.RawMessage `json:"data"`
 }
 
+var cacheDirFunc = defaultCacheDir
+
 func cacheDir() (string, error) {
-	home, err := os.UserHomeDir()
+	return cacheDirFunc()
+}
+
+func defaultCacheDir() (string, error) {
+	if dir := strings.TrimSpace(os.Getenv("KIME_CACHE_DIR")); dir != "" {
+		return dir, nil
+	}
+
+	base, err := os.UserCacheDir()
 	if err != nil {
 		return "", err
 	}
 
-	return filepath.Join(home, ".cache", "kime"), nil
+	return filepath.Join(base, "kime"), nil
 }
 
 func cachePath() (string, error) {
