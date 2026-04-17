@@ -215,10 +215,60 @@ func isValidSubscription(sub api.Subscription) bool {
 	return sub.Goods.Title != "" && sub.CurrentEndTime != ""
 }
 
-func loadSubscription(ctx context.Context, client *api.Client, tr *i18n.I18n) (*api.GetSubscriptionResponse, error) {
-	// Always fetch live data so balances are real-time.
+// subscriptionFetcher abstracts api.Client for testability.
+type subscriptionFetcher interface {
+	GetSubscription(ctx context.Context) (*api.GetSubscriptionResponse, error)
+}
+
+// tryLoadCachedSubscription attempts to load a valid cached subscription.
+func tryLoadCachedSubscription(tr *i18n.I18n) *api.GetSubscriptionResponse {
+	cachedData, err := cache.Load(100 * 365 * 24 * time.Hour)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "%s: %v\n", tr.T("read_cache_failed"), err)
+
+		return nil
+	}
+
+	if cachedData == nil {
+		return nil
+	}
+
+	var cached api.GetSubscriptionResponse
+	if err := jsonv2.Unmarshal(cachedData, &cached); err != nil {
+		fmt.Fprintf(os.Stderr, "%s: %v\n", tr.T("parse_cache_failed"), err)
+
+		return nil
+	}
+
+	if !isValidSubscription(cached.Subscription) || len(cached.Capabilities) == 0 {
+		return nil
+	}
+
+	endTime, err := time.Parse(time.RFC3339Nano, cached.Subscription.CurrentEndTime)
+	if err != nil || !time.Now().Before(endTime) {
+		return nil
+	}
+
+	return &cached
+}
+
+func loadSubscription(ctx context.Context, client subscriptionFetcher, tr *i18n.I18n) (*api.GetSubscriptionResponse, error) {
+	forceRefresh := isForceRefresh()
+
+	// Try cache first when not forcing refresh so that network failures can be masked.
+	var cached *api.GetSubscriptionResponse
+	if !forceRefresh && !api.IsMock() {
+		cached = tryLoadCachedSubscription(tr)
+	}
+
+	// Attempt live fetch for real-time balances.
 	liveSub, err := client.GetSubscription(ctx)
 	if err != nil {
+		// Network failure: fall back to cache if available.
+		if cached != nil {
+			return cached, nil
+		}
+
 		return nil, err
 	}
 
@@ -226,36 +276,19 @@ func loadSubscription(ctx context.Context, client *api.Client, tr *i18n.I18n) (*
 		return liveSub, nil
 	}
 
-	forceRefresh := isForceRefresh()
 	liveValid := isValidSubscription(liveSub.Subscription) && len(liveSub.Capabilities) > 0
 
-	if !forceRefresh {
-		// Load cached subscription info (plan, validity, capabilities).
-		// We use a long TTL here because expiration is checked against the subscription end date.
-		cachedData, err := cache.Load(100 * 365 * 24 * time.Hour)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "%s: %v\n", tr.T("read_cache_failed"), err)
-		} else if cachedData != nil {
-			var cached api.GetSubscriptionResponse
-			if err := jsonv2.Unmarshal(cachedData, &cached); err != nil {
-				fmt.Fprintf(os.Stderr, "%s: %v\n", tr.T("parse_cache_failed"), err)
-			} else if isValidSubscription(cached.Subscription) && len(cached.Capabilities) > 0 {
-				// Cache is valid until subscription.currentEndTime.
-				endTime, err := time.Parse(time.RFC3339Nano, cached.Subscription.CurrentEndTime)
-				if err == nil && time.Now().Before(endTime) {
-					// Merge: keep live balances, use cached subscription details.
-					liveSub.Subscription = cached.Subscription
-					liveSub.Subscribed = cached.Subscribed
-					liveSub.PurchaseSubscription = cached.PurchaseSubscription
-					liveSub.Capabilities = cached.Capabilities
+	if cached != nil && !forceRefresh {
+		// Merge: keep live balances, use cached subscription details.
+		liveSub.Subscription = cached.Subscription
+		liveSub.Subscribed = cached.Subscribed
+		liveSub.PurchaseSubscription = cached.PurchaseSubscription
+		liveSub.Capabilities = cached.Capabilities
 
-					return liveSub, nil
-				}
-			}
-		}
+		return liveSub, nil
 	}
 
-	// Cache miss, expired, or invalid: save valid live subscription metadata without balances.
+	// Cache miss, expired, or force refresh: save valid live subscription metadata without balances.
 	if liveValid {
 		cacheSub := api.GetSubscriptionResponse{
 			Subscription:         liveSub.Subscription,
