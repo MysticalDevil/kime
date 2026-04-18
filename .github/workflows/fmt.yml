@@ -17,12 +17,8 @@ jobs:
         with:
           go-version-file: go.mod
 
+      - name: Install just
+        uses: taiki-e/install-action@just
+
       - name: Check formatting
-        env:
-          GOEXPERIMENT: jsonv2
-        run: |
-          diff=$(go tool gofumpt -d .)
-          if [ -n "$diff" ]; then
-            echo "$diff"
-            exit 1
-          fi
+        run: just fmt-check

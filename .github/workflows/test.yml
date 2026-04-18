@@ -2,7 +2,9 @@ name: test
 
 on:
   push:
-    tags: ['*']
+    branches: [main]
+  pull_request:
+    branches: [main]
 
 jobs:
   test:
@@ -19,7 +21,26 @@ jobs:
         with:
           go-version-file: go.mod
 
+      - name: Install just
+        uses: taiki-e/install-action@just
+
       - name: Run tests
+        run: just test
+
+  coverage:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Install just
+        uses: taiki-e/install-action@just
+
+      - name: Check coverage threshold
         env:
-          GOEXPERIMENT: jsonv2
-        run: go test ./...
+          MIN_COVERAGE: "73.0"
+        run: just coverage

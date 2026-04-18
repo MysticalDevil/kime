@@ -17,7 +17,8 @@ jobs:
         with:
           go-version-file: go.mod
 
+      - name: Install just
+        uses: taiki-e/install-action@just
+
       - name: Run golangci-lint
-        env:
-          GOEXPERIMENT: jsonv2
-        run: go tool golangci-lint run ./...
+        run: just lint-check
