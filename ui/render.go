@@ -179,6 +179,7 @@ func buildUsageCard(title string, detail api.UsageDetail, extra string, tr *i18n
 		dur := time.Until(reset)
 		if dur > 0 {
 			var timeStr string
+
 			if dur < time.Hour {
 				minutes := max(int(math.Ceil(dur.Minutes())), 1)
 				timeStr = tr.T("minutes_later", minutes)
@@ -186,6 +187,7 @@ func buildUsageCard(title string, detail api.UsageDetail, extra string, tr *i18n
 				hours := max(int(math.Ceil(dur.Hours())), 1)
 				timeStr = tr.T("hours_later", hours)
 			}
+
 			fmt.Fprintf(&content, "\n%s  %s",
 				cardLabelStyle.Render(tr.T("reset_time")),
 				cardValueStyle.Render(timeStr),
@@ -203,10 +205,12 @@ func isBalanceExpired(b api.Balance, now time.Time) bool {
 	if b.ExpireTime == "" {
 		return false
 	}
+
 	et, err := time.Parse(time.RFC3339Nano, b.ExpireTime)
 	if err != nil {
 		return false
 	}
+
 	return !et.After(now)
 }
 

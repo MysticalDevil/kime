@@ -71,12 +71,15 @@ func TestResolveCredentials_EnvOverridesConfig(t *testing.T) {
 	if token != "env-tok" {
 		t.Errorf("token = %q, want env-tok", token)
 	}
+
 	if deviceID != "env-dev" {
 		t.Errorf("deviceID = %q, want env-dev", deviceID)
 	}
+
 	if sessionID != "env-sess" {
 		t.Errorf("sessionID = %q, want env-sess", sessionID)
 	}
+
 	if trafficID != "env-usr" {
 		t.Errorf("trafficID = %q, want env-usr", trafficID)
 	}
