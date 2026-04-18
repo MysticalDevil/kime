@@ -50,6 +50,38 @@ func TestResolveCredentials_FromEnv(t *testing.T) {
 	}
 }
 
+func TestResolveCredentials_EnvOverridesConfig(t *testing.T) {
+	t.Setenv("KIME_TOKEN", "env-tok")
+	t.Setenv("KIME_DEVICE_ID", "env-dev")
+	t.Setenv("KIME_USER_ID", "env-usr")
+	t.Setenv("KIME_SESSION_ID", "env-sess")
+
+	cfg := &config.Config{
+		Token:     "cfg-tok",
+		DeviceID:  "cfg-dev",
+		SessionID: "cfg-sess",
+		UserID:    "cfg-usr",
+	}
+
+	token, deviceID, sessionID, trafficID, err := resolveCredentials(cfg)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if token != "env-tok" {
+		t.Errorf("token = %q, want env-tok", token)
+	}
+	if deviceID != "env-dev" {
+		t.Errorf("deviceID = %q, want env-dev", deviceID)
+	}
+	if sessionID != "env-sess" {
+		t.Errorf("sessionID = %q, want env-sess", sessionID)
+	}
+	if trafficID != "env-usr" {
+		t.Errorf("trafficID = %q, want env-usr", trafficID)
+	}
+}
+
 func TestResolveCredentials_MissingToken(t *testing.T) {
 	if err := os.Unsetenv("KIME_TOKEN"); err != nil {
 		t.Fatalf("Unsetenv failed: %v", err)
