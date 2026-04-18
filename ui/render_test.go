@@ -182,6 +182,23 @@ func TestSelectPrimaryBalanceBranches(t *testing.T) {
 			},
 			want: "FEATURE_CHAT",
 		},
+		{
+			name: "skip expired omni and pick coding",
+			balances: []api.Balance{
+				{Feature: "FEATURE_OMNI", ExpireTime: now.Add(-time.Hour).Format(time.RFC3339Nano)},
+				{Feature: "FEATURE_CODING", ExpireTime: now.Add(time.Hour).Format(time.RFC3339Nano)},
+			},
+			want: "FEATURE_CODING",
+		},
+		{
+			name: "skip expired omni and coding, pick next valid",
+			balances: []api.Balance{
+				{Feature: "FEATURE_OMNI", ExpireTime: now.Add(-time.Hour).Format(time.RFC3339Nano)},
+				{Feature: "FEATURE_CODING", ExpireTime: now.Add(-time.Hour).Format(time.RFC3339Nano)},
+				{Feature: "FEATURE_CHAT", ExpireTime: now.Add(time.Hour).Format(time.RFC3339Nano)},
+			},
+			want: "FEATURE_CHAT",
+		},
 	}
 
 	for _, tt := range tests {

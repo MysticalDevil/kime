@@ -196,6 +196,20 @@ func buildUsageCard(title string, detail api.UsageDetail, extra string, tr *i18n
 	return cardStyle.Render(content.String())
 }
 
+// isBalanceExpired reports whether a balance has passed its ExpireTime.
+// A blank ExpireTime is treated as never expired; an unparseable ExpireTime
+// is also treated as never expired to preserve backward-compatible fallback.
+func isBalanceExpired(b api.Balance, now time.Time) bool {
+	if b.ExpireTime == "" {
+		return false
+	}
+	et, err := time.Parse(time.RFC3339Nano, b.ExpireTime)
+	if err != nil {
+		return false
+	}
+	return !et.After(now)
+}
+
 // selectPrimaryBalance picks the most relevant balance for display.
 // It prefers FEATURE_OMNI, then FEATURE_CODING, then the first non-expired item.
 func selectPrimaryBalance(balances []api.Balance) *api.Balance {
@@ -203,25 +217,23 @@ func selectPrimaryBalance(balances []api.Balance) *api.Balance {
 		return nil
 	}
 
-	for i := range balances {
-		if balances[i].Feature == "FEATURE_OMNI" {
-			return &balances[i]
-		}
-	}
-
-	for i := range balances {
-		if balances[i].Feature == "FEATURE_CODING" {
-			return &balances[i]
-		}
-	}
-
 	now := time.Now()
 
 	for i := range balances {
-		if balances[i].ExpireTime != "" {
-			if et, err := time.Parse(time.RFC3339Nano, balances[i].ExpireTime); err == nil && et.After(now) {
-				return &balances[i]
-			}
+		if balances[i].Feature == "FEATURE_OMNI" && !isBalanceExpired(balances[i], now) {
+			return &balances[i]
+		}
+	}
+
+	for i := range balances {
+		if balances[i].Feature == "FEATURE_CODING" && !isBalanceExpired(balances[i], now) {
+			return &balances[i]
+		}
+	}
+
+	for i := range balances {
+		if !isBalanceExpired(balances[i], now) {
+			return &balances[i]
 		}
 	}
 
