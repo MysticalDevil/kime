@@ -1,4 +1,3 @@
-// Package api contains request/response types for the Kimi Code Console API.
 package api
 
 // ---------- GetUsages ----------

@@ -38,6 +38,7 @@ func configDir() (string, error) {
 	return configDirFunc()
 }
 
+// defaultConfigDir returns the platform config directory, respecting KIME_CONFIG_DIR.
 func defaultConfigDir() (string, error) {
 	if dir := strings.TrimSpace(os.Getenv("KIME_CONFIG_DIR")); dir != "" {
 		return dir, nil
@@ -51,6 +52,7 @@ func defaultConfigDir() (string, error) {
 	return filepath.Join(base, "kime"), nil
 }
 
+// configPath returns the full path to the config file.
 func configPath() (string, error) {
 	dir, err := configDir()
 	if err != nil {
@@ -60,6 +62,7 @@ func configPath() (string, error) {
 	return filepath.Join(dir, "config.json"), nil
 }
 
+// ensureDir creates the config directory if it does not exist.
 func ensureDir() error {
 	dir, err := configDir()
 	if err != nil {
@@ -69,7 +72,7 @@ func ensureDir() error {
 	return os.MkdirAll(dir, 0o755)
 }
 
-// Load reads config file.
+// Load reads the config file. Returns nil if the file does not exist.
 func Load() (*Config, error) {
 	path, err := configPath()
 	if err != nil {
@@ -97,7 +100,7 @@ func Load() (*Config, error) {
 	return &cfg, nil
 }
 
-// Save writes config file.
+// Save writes the config file. It creates the directory if necessary.
 func Save(cfg *Config) error {
 	if err := ensureDir(); err != nil {
 		return err

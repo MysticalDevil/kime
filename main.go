@@ -82,6 +82,7 @@ func main() {
 	}
 }
 
+// runCheck fetches usage and subscription data and renders the terminal UI.
 func runCheck() {
 	cfg, err := config.Load()
 	if err != nil {
@@ -130,6 +131,7 @@ func runCheck() {
 	fmt.Println(output)
 }
 
+// printHelp displays command usage, flags and environment variables.
 func printHelp() {
 	var (
 		accent = lipgloss.Color("#90EE90")
@@ -208,11 +210,13 @@ func printHelp() {
 	fmt.Println(lipgloss.NewStyle().Foreground(dim).MarginTop(1).Render("Build Note: This project requires GOEXPERIMENT=jsonv2."))
 }
 
+// isForceRefresh reports whether KIME_FORCE_REFRESH is set to a non-zero value.
 func isForceRefresh() bool {
 	v := os.Getenv("KIME_FORCE_REFRESH")
 	return v != "" && v != "0"
 }
 
+// isValidSubscription checks whether the subscription has required fields populated.
 func isValidSubscription(sub api.Subscription) bool {
 	return sub.Goods.Title != "" && sub.CurrentEndTime != ""
 }
@@ -254,6 +258,7 @@ func tryLoadCachedSubscription(tr *i18n.I18n) *api.GetSubscriptionResponse {
 	return &cached
 }
 
+// loadSubscription fetches live subscription data, falling back to cache on failure.
 func loadSubscription(ctx context.Context, client subscriptionFetcher, tr *i18n.I18n) (*api.GetSubscriptionResponse, error) {
 	forceRefresh := isForceRefresh()
 

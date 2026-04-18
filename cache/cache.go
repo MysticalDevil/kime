@@ -30,6 +30,7 @@ func cacheDir() (string, error) {
 	return cacheDirFunc()
 }
 
+// defaultCacheDir returns the platform cache directory, respecting KIME_CACHE_DIR.
 func defaultCacheDir() (string, error) {
 	if dir := strings.TrimSpace(os.Getenv("KIME_CACHE_DIR")); dir != "" {
 		return dir, nil
@@ -43,6 +44,7 @@ func defaultCacheDir() (string, error) {
 	return filepath.Join(base, "kime"), nil
 }
 
+// cachePath returns the full path to the cache file.
 func cachePath() (string, error) {
 	dir, err := cacheDir()
 	if err != nil {
@@ -52,6 +54,7 @@ func cachePath() (string, error) {
 	return filepath.Join(dir, cacheFileName), nil
 }
 
+// ensureDir creates the cache directory if it does not exist.
 func ensureDir() error {
 	dir, err := cacheDir()
 	if err != nil {

@@ -1,4 +1,5 @@
-// Package api provides an HTTP client for the Kimi Code Console backend.
+// Package api provides an HTTP client, service wrappers, and request/response
+// types for the Kimi Code Console backend.
 package api
 
 import (
