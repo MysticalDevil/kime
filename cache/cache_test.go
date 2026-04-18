@@ -78,3 +78,33 @@ func TestLoadNotExist(t *testing.T) {
 		t.Error("expected nil for missing cache")
 	}
 }
+
+func TestClear(t *testing.T) {
+	dir := t.TempDir()
+	t.Setenv("KIME_CACHE_DIR", dir)
+
+	if err := Save(json.RawMessage(`{"foo":"bar"}`)); err != nil {
+		t.Fatalf("Save failed: %v", err)
+	}
+
+	if err := Clear(); err != nil {
+		t.Fatalf("Clear failed: %v", err)
+	}
+
+	path := filepath.Join(dir, cacheFileName)
+	if _, err := os.Stat(path); !os.IsNotExist(err) {
+		t.Fatalf("cache file still exists after Clear, err = %v", err)
+	}
+}
+
+func TestInfo(t *testing.T) {
+	dir := t.TempDir()
+	t.Setenv("KIME_CACHE_DIR", dir)
+
+	got := Info()
+
+	want := filepath.Join(dir, cacheFileName)
+	if got != "cache path: "+want {
+		t.Fatalf("Info = %q, want %q", got, "cache path: "+want)
+	}
+}

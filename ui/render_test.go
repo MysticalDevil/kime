@@ -3,6 +3,7 @@ package ui
 import (
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/MysticalDevil/kime/api"
 	"github.com/MysticalDevil/kime/i18n"
@@ -135,6 +136,92 @@ func TestFormatWindow_RespectsTimeUnit(t *testing.T) {
 			got := formatWindow(tt.window)
 			if got != tt.want {
 				t.Errorf("formatWindow(%+v) = %q, want %q", tt.window, got, tt.want)
+			}
+		})
+	}
+}
+
+func TestSelectPrimaryBalanceBranches(t *testing.T) {
+	now := time.Now()
+
+	tests := []struct {
+		name     string
+		balances []api.Balance
+		want     string
+	}{
+		{
+			name: "prefer omni",
+			balances: []api.Balance{
+				{Feature: "FEATURE_CHAT"},
+				{Feature: "FEATURE_OMNI"},
+				{Feature: "FEATURE_CODING"},
+			},
+			want: "FEATURE_OMNI",
+		},
+		{
+			name: "prefer coding when omni missing",
+			balances: []api.Balance{
+				{Feature: "FEATURE_CHAT"},
+				{Feature: "FEATURE_CODING"},
+			},
+			want: "FEATURE_CODING",
+		},
+		{
+			name: "prefer first non expired",
+			balances: []api.Balance{
+				{Feature: "FEATURE_CHAT", ExpireTime: now.Add(-time.Hour).Format(time.RFC3339Nano)},
+				{Feature: "FEATURE_AGENT", ExpireTime: now.Add(time.Hour).Format(time.RFC3339Nano)},
+			},
+			want: "FEATURE_AGENT",
+		},
+		{
+			name: "fallback to first item",
+			balances: []api.Balance{
+				{Feature: "FEATURE_CHAT", ExpireTime: "bad-time"},
+				{Feature: "FEATURE_AGENT"},
+			},
+			want: "FEATURE_CHAT",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := selectPrimaryBalance(tt.balances)
+			if got == nil {
+				t.Fatal("selectPrimaryBalance returned nil")
+			}
+
+			if got.Feature != tt.want {
+				t.Fatalf("feature = %q, want %q", got.Feature, tt.want)
+			}
+		})
+	}
+}
+
+func TestFeatureName(t *testing.T) {
+	tr := i18n.New("en")
+
+	tests := []struct {
+		feature string
+		want    string
+	}{
+		{feature: "FEATURE_AGENT", want: "Agent"},
+		{feature: "FEATURE_WEBSITES", want: "Websites"},
+		{feature: "FEATURE_DOCUMENTS", want: "Documents"},
+		{feature: "FEATURE_SLIDES", want: "Slides"},
+		{feature: "FEATURE_SHEETS", want: "Sheets"},
+		{feature: "FEATURE_DEEP_RESEARCH", want: "Deep Research"},
+		{feature: "FEATURE_CODING", want: "Coding"},
+		{feature: "FEATURE_CHAT", want: "Chat"},
+		{feature: "FEATURE_CLAW", want: "KimiClaw"},
+		{feature: "FEATURE_SWARM", want: "Swarm"},
+		{feature: "FEATURE_UNKNOWN", want: "FEATURE_UNKNOWN"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.feature, func(t *testing.T) {
+			if got := featureName(tt.feature, tr); got != tt.want {
+				t.Fatalf("featureName(%q) = %q, want %q", tt.feature, got, tt.want)
 			}
 		})
 	}
