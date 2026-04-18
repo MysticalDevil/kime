@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 )
@@ -89,8 +90,13 @@ func TestSaveAndLoad(t *testing.T) {
 		t.Fatalf("Stat failed: %v", err)
 	}
 
-	if got := info.Mode().Perm(); got != 0o600 {
-		t.Fatalf("config file mode = %o, want 600", got)
+	wantMode := os.FileMode(0o600)
+	if runtime.GOOS == "windows" {
+		wantMode = 0o666
+	}
+
+	if got := info.Mode().Perm(); got != wantMode {
+		t.Fatalf("config file mode = %o, want %o", got, wantMode)
 	}
 
 	loaded, err := Load()
