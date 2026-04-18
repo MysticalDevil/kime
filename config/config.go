@@ -32,6 +32,8 @@ var (
 	stdin         io.Reader = os.Stdin
 )
 
+// test injection wrapper: delegates to configDirFunc so tests can swap the directory provider.
+// ast-grep-ignore: passthrough-wrapper
 func configDir() (string, error) {
 	return configDirFunc()
 }

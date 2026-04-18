@@ -24,6 +24,8 @@ type MembershipCache struct {
 
 var cacheDirFunc = defaultCacheDir
 
+// test injection wrapper: delegates to cacheDirFunc so tests can swap the directory provider.
+// ast-grep-ignore: passthrough-wrapper
 func cacheDir() (string, error) {
 	return cacheDirFunc()
 }
