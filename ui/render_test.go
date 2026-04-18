@@ -198,6 +198,30 @@ func TestSelectPrimaryBalanceBranches(t *testing.T) {
 	}
 }
 
+// TestBuildUsageCard_ResetTimeShowsMinutes verifies that reset times under one hour
+// are shown in minutes instead of being truncated to 0 hours.
+func TestBuildUsageCard_ResetTimeShowsMinutes(t *testing.T) {
+	tr := i18n.New("en")
+
+	// 30 minutes from now
+	resetTime := time.Now().Add(30 * time.Minute).Format(time.RFC3339Nano)
+	detail := api.UsageDetail{
+		Limit:     "100",
+		Remaining: "50",
+		ResetTime: resetTime,
+	}
+
+	output := buildUsageCard("Test", detail, "", tr, false)
+
+	if strings.Contains(output, "0 hours later") {
+		t.Errorf("output should not contain '0 hours later', got:\n%s", output)
+	}
+
+	if !strings.Contains(output, "30 minutes later") {
+		t.Errorf("expected '30 minutes later' in output, got:\n%s", output)
+	}
+}
+
 func TestFeatureName(t *testing.T) {
 	tr := i18n.New("en")
 

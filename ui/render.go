@@ -3,6 +3,7 @@ package ui
 
 import (
 	"fmt"
+	"math"
 	"strconv"
 	"strings"
 	"time"
@@ -174,12 +175,22 @@ func buildUsageCard(title string, detail api.UsageDetail, extra string, tr *i18n
 	}
 
 	reset, err := time.Parse(time.RFC3339Nano, detail.ResetTime)
-	if err == nil && !reset.IsZero() {
-		hours := max(int(time.Until(reset).Hours()), 0)
-		fmt.Fprintf(&content, "\n%s  %s",
-			cardLabelStyle.Render(tr.T("reset_time")),
-			cardValueStyle.Render(tr.T("hours_later", hours)),
-		)
+	if err == nil {
+		dur := time.Until(reset)
+		if dur > 0 {
+			var timeStr string
+			if dur < time.Hour {
+				minutes := max(int(math.Ceil(dur.Minutes())), 1)
+				timeStr = tr.T("minutes_later", minutes)
+			} else {
+				hours := max(int(math.Ceil(dur.Hours())), 1)
+				timeStr = tr.T("hours_later", hours)
+			}
+			fmt.Fprintf(&content, "\n%s  %s",
+				cardLabelStyle.Render(tr.T("reset_time")),
+				cardValueStyle.Render(timeStr),
+			)
+		}
 	}
 
 	return cardStyle.Render(content.String())
