@@ -31,7 +31,7 @@ A beautiful CLI tool to display your **Kimi Code Console** stats in the terminal
 ### Via `go install`
 
 ```bash
-go install github.com/MysticalDevil/kime@latest
+GOEXPERIMENT=jsonv2 go install github.com/MysticalDevil/kime@latest
 ```
 
 ### Via `mise`
@@ -75,6 +75,22 @@ $env:Path = "$HOME\bin;$env:Path"
 ```
 
 Windows binary name: `kime.exe`
+
+### Developer commands
+
+This repository uses `just` as the task runner:
+
+```bash
+just fmt         # format with gofumpt
+just fmt-check   # verify formatting only
+just lint        # run golangci-lint with --fix
+just lint-check  # CI-style lint check
+just test        # run the full test suite
+just coverage    # enforce the coverage gate
+just check       # fmt + lint-check + test + coverage
+```
+
+Current CI coverage gate: **73%** total coverage.
 
 ---
 

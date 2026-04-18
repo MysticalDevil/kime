@@ -31,7 +31,7 @@
 ### 通过 `go install`
 
 ```bash
-go install github.com/MysticalDevil/kime@latest
+GOEXPERIMENT=jsonv2 go install github.com/MysticalDevil/kime@latest
 ```
 
 ### 通过 `mise`
@@ -75,6 +75,22 @@ $env:Path = "$HOME\bin;$env:Path"
 ```
 
 Windows 二进制文件名为 `kime.exe`。
+
+### 开发命令
+
+本仓库使用 `just` 作为任务入口：
+
+```bash
+just fmt         # 使用 gofumpt 格式化
+just fmt-check   # 仅检查格式
+just lint        # 运行带 --fix 的 golangci-lint
+just lint-check  # CI 风格 lint 检查
+just test        # 运行全部测试
+just coverage    # 执行覆盖率门槛检查
+just check       # 一次性执行 fmt + lint-check + test + coverage
+```
+
+当前 CI 覆盖率门槛为：**73%** 总覆盖率。
 
 ---
 
@@ -187,8 +203,7 @@ kime --help
 kime check
 
 # 英文界面
-# 修改配置文件中的 "language" 为 "en"
-kime check
+KIME_LANG=en kime check   # 或在配置文件中将 "language" 设为 "en"
 
 # Mock 模式（不发起网络请求）
 KIME_MOCK=1 kime check
