@@ -77,3 +77,20 @@ func TestResolveCredentials_MissingDeviceID(t *testing.T) {
 		t.Fatal("expected error for missing device_id")
 	}
 }
+
+func TestNewClient_MockModeDoesNotRequireCredentials(t *testing.T) {
+	t.Setenv("KIME_MOCK", "1")
+
+	if err := os.Unsetenv("KIME_TOKEN"); err != nil {
+		t.Fatalf("Unsetenv failed: %v", err)
+	}
+
+	client, err := NewClient(&config.Config{})
+	if err != nil {
+		t.Fatalf("NewClient in mock mode returned error: %v", err)
+	}
+
+	if client == nil {
+		t.Fatal("expected client in mock mode")
+	}
+}

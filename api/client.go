@@ -31,6 +31,14 @@ type Client struct {
 
 // NewClient creates a Client using the provided config, environment variables or JWT claims.
 func NewClient(cfg *config.Config) (*Client, error) {
+	if IsMock() {
+		return &Client{
+			hc: &http.Client{
+				Timeout: 30 * time.Second,
+			},
+		}, nil
+	}
+
 	token, deviceID, sessionID, trafficID, err := resolveCredentials(cfg)
 	if err != nil {
 		return nil, err

@@ -298,12 +298,8 @@ func TestCLIUnknownCommand(t *testing.T) {
 
 func TestCLICheckInMockMode(t *testing.T) {
 	env := map[string]string{
-		"KIME_MOCK":       "1",
-		"KIME_TOKEN":      "header.eyJkZXZpY2VfaWQiOiJkZXYiLCJzc2lkIjoic2VzcyIsInN1YiI6InVzZXIifQ.sig",
-		"KIME_DEVICE_ID":  "dev",
-		"KIME_SESSION_ID": "sess",
-		"KIME_USER_ID":    "user",
-		"KIME_LANG":       "en",
+		"KIME_MOCK": "1",
+		"KIME_LANG": "en",
 	}
 
 	result := runMainProcess(t, "check", env)
