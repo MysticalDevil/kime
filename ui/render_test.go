@@ -78,3 +78,45 @@ func TestRender_NilSubscription(t *testing.T) {
 		t.Errorf("output missing fallback text for nil subscription")
 	}
 }
+
+func TestFormatWindow_UsesTimeUnit(t *testing.T) {
+	tests := []struct {
+		name   string
+		window api.LimitWindow
+		want   string
+	}{
+		{
+			name:   "seconds",
+			window: api.LimitWindow{Duration: 30, TimeUnit: "TIME_UNIT_SECOND"},
+			want:   "30s",
+		},
+		{
+			name:   "minutes",
+			window: api.LimitWindow{Duration: 45, TimeUnit: "TIME_UNIT_MINUTE"},
+			want:   "45min",
+		},
+		{
+			name:   "minutes folded to hours",
+			window: api.LimitWindow{Duration: 300, TimeUnit: "TIME_UNIT_MINUTE"},
+			want:   "5h",
+		},
+		{
+			name:   "hours",
+			window: api.LimitWindow{Duration: 2, TimeUnit: "TIME_UNIT_HOUR"},
+			want:   "2h",
+		},
+		{
+			name:   "days",
+			window: api.LimitWindow{Duration: 1, TimeUnit: "TIME_UNIT_DAY"},
+			want:   "1d",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := formatWindow(tt.window); got != tt.want {
+				t.Errorf("formatWindow() = %q, want %q", got, tt.want)
+			}
+		})
+	}
+}

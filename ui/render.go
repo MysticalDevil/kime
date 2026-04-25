@@ -88,7 +88,7 @@ func Render(usages *api.GetUsagesResponse, sub *api.GetSubscriptionResponse, tr 
 
 		if len(u.Limits) > 0 {
 			limit := u.Limits[0]
-			windowText := formatWindow(limit.Window.Duration)
+			windowText := formatWindow(limit.Window)
 			card2 = buildUsageCard(tr.T("rate_limit"), limit.Detail, windowText, tr, showProgress)
 		} else {
 			card2 = buildUsageCard(tr.T("rate_limit"), api.UsageDetail{}, "", tr, showProgress)
@@ -122,12 +122,23 @@ func Render(usages *api.GetUsagesResponse, sub *api.GetSubscriptionResponse, tr 
 	return sb.String()
 }
 
-func formatWindow(minutes int) string {
-	if minutes%60 == 0 {
-		return fmt.Sprintf("%dh", minutes/60)
-	}
+func formatWindow(window api.LimitWindow) string {
+	switch window.TimeUnit {
+	case "TIME_UNIT_SECOND":
+		return fmt.Sprintf("%ds", window.Duration)
+	case "TIME_UNIT_MINUTE", "":
+		if window.Duration%60 == 0 {
+			return fmt.Sprintf("%dh", window.Duration/60)
+		}
 
-	return fmt.Sprintf("%dmin", minutes)
+		return fmt.Sprintf("%dmin", window.Duration)
+	case "TIME_UNIT_HOUR":
+		return fmt.Sprintf("%dh", window.Duration)
+	case "TIME_UNIT_DAY":
+		return fmt.Sprintf("%dd", window.Duration)
+	default:
+		return fmt.Sprintf("%d %s", window.Duration, window.TimeUnit)
+	}
 }
 
 func buildUsageCard(title string, detail api.UsageDetail, extra string, tr *i18n.I18n, showProgress bool) string {
