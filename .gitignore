@@ -34,3 +34,5 @@ Thumbs.db
 # Local cache / config (user-specific)
 /.cache/
 /.config/
+.codex
+.claude
