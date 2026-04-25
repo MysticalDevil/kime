@@ -1,7 +1,7 @@
 <h1 align="center">kime</h1>
 
 <p align="center">
-  <a href="https://go.dev"><img src="https://img.shields.io/badge/Go-1.22%2B-00ADD8?logo=go" alt="Go"></a>
+  <a href="https://go.dev"><img src="https://img.shields.io/badge/Go-1.26.2%2B-00ADD8?logo=go" alt="Go"></a>
   <a href="https://www.kimi.com/code"><img src="https://img.shields.io/badge/Kimi-Code%20Console-5B5B5B" alt="Kimi"></a>
   <a href="./LICENSE"><img src="https://img.shields.io/badge/License-BSD--3--Clause-blue" alt="License"></a>
 </p>
@@ -31,7 +31,7 @@
 ### 通过 `go install`
 
 ```bash
-go install github.com/MysticalDevil/kime@latest
+GOEXPERIMENT=jsonv2 go install github.com/MysticalDevil/kime@latest
 ```
 
 ### 通过 `mise`
