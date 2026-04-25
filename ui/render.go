@@ -73,6 +73,7 @@ var (
 )
 
 type renderStyles struct {
+	mode                RenderMode
 	titleStyle          lipgloss.Style
 	cardStyle           lipgloss.Style
 	cardTitleStyle      lipgloss.Style
@@ -96,6 +97,7 @@ func stylesForMode(mode RenderMode) renderStyles {
 		plain := lipgloss.NewStyle()
 
 		return renderStyles{
+			mode:                RenderModeASCII,
 			titleStyle:          plain.MarginLeft(2),
 			cardStyle:           plain.Border(lipgloss.ASCIIBorder()).Padding(0, 1).Width(30),
 			cardTitleStyle:      plain.MarginBottom(1),
@@ -116,6 +118,7 @@ func stylesForMode(mode RenderMode) renderStyles {
 	}
 
 	return renderStyles{
+		mode:                RenderModeUnicode,
 		titleStyle:          titleStyle,
 		cardStyle:           cardStyle,
 		cardTitleStyle:      cardTitleStyle,
@@ -371,7 +374,7 @@ func buildSubscriptionBox(sub *api.GetSubscriptionResponse, tr *i18n.I18n, style
 		ratio := b.AmountUsedRatio * 100
 
 		style := styles.cardValueStyle
-		if modeUsesUnicode(styles) {
+		if modeUsesUnicode(styles.mode) {
 			style = lipgloss.NewStyle().Foreground(lipgloss.Color(gradientGreenToRed(b.AmountUsedRatio)))
 		}
 
@@ -384,8 +387,8 @@ func buildSubscriptionBox(sub *api.GetSubscriptionResponse, tr *i18n.I18n, style
 	return styles.boxStyle.Render(content.String())
 }
 
-func modeUsesUnicode(styles renderStyles) bool {
-	return styles.progressFilled == "█"
+func modeUsesUnicode(mode RenderMode) bool {
+	return mode == RenderModeUnicode
 }
 
 func buildCapabilityTable(caps []api.Capability, tr *i18n.I18n, styles renderStyles) string {
