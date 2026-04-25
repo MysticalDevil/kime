@@ -71,11 +71,91 @@ var (
 	dateStyle     = lipgloss.NewStyle().Foreground(lipgloss.Color("#FFFFFF"))
 )
 
+type renderStyles struct {
+	titleStyle          lipgloss.Style
+	cardStyle           lipgloss.Style
+	cardTitleStyle      lipgloss.Style
+	cardValueStyle      lipgloss.Style
+	cardLabelStyle      lipgloss.Style
+	sectionTitleStyle   lipgloss.Style
+	boxStyle            lipgloss.Style
+	rowEvenStyle        lipgloss.Style
+	rowOddStyle         lipgloss.Style
+	headerStyle         lipgloss.Style
+	progressFilledStyle lipgloss.Style
+	progressEmptyStyle  lipgloss.Style
+	planNameStyle       lipgloss.Style
+	dateStyle           lipgloss.Style
+	progressFilled      string
+	progressEmpty       string
+}
+
+func stylesForMode(mode RenderMode) renderStyles {
+	if mode == RenderModeASCII {
+		plain := lipgloss.NewStyle()
+
+		return renderStyles{
+			titleStyle:          plain.MarginLeft(2),
+			cardStyle:           plain.Border(lipgloss.ASCIIBorder()).Padding(0, 1).Width(30),
+			cardTitleStyle:      plain.MarginBottom(1),
+			cardValueStyle:      plain,
+			cardLabelStyle:      plain,
+			sectionTitleStyle:   plain.MarginLeft(2).MarginBottom(0),
+			boxStyle:            plain.Border(lipgloss.ASCIIBorder()).Padding(0, 1),
+			rowEvenStyle:        plain.PaddingLeft(1).PaddingRight(1),
+			rowOddStyle:         plain.PaddingLeft(1).PaddingRight(1),
+			headerStyle:         plain.PaddingLeft(1).PaddingRight(1),
+			progressFilledStyle: plain,
+			progressEmptyStyle:  plain,
+			planNameStyle:       plain,
+			dateStyle:           plain,
+			progressFilled:      "#",
+			progressEmpty:       ".",
+		}
+	}
+
+	return renderStyles{
+		titleStyle:          titleStyle,
+		cardStyle:           cardStyle,
+		cardTitleStyle:      cardTitleStyle,
+		cardValueStyle:      cardValueStyle,
+		cardLabelStyle:      cardLabelStyle,
+		sectionTitleStyle:   sectionTitleStyle,
+		boxStyle:            boxStyle,
+		rowEvenStyle:        rowEvenStyle,
+		rowOddStyle:         rowOddStyle,
+		headerStyle:         headerStyle,
+		progressFilledStyle: progressFilledStyle,
+		progressEmptyStyle:  progressEmptyStyle,
+		planNameStyle:       planNameStyle,
+		dateStyle:           dateStyle,
+		progressFilled:      "█",
+		progressEmpty:       "░",
+	}
+}
+
 // Render builds the terminal UI from API responses.
 func Render(usages *api.GetUsagesResponse, sub *api.GetSubscriptionResponse, tr *i18n.I18n, showProgress bool) string {
+	return RenderWithMode(usages, sub, tr, showProgress, RenderModeUnicode)
+}
+
+// RenderWithMode builds the terminal UI using the requested render mode.
+func RenderWithMode(
+	usages *api.GetUsagesResponse,
+	sub *api.GetSubscriptionResponse,
+	tr *i18n.I18n,
+	showProgress bool,
+	mode RenderMode,
+) string {
+	if mode == RenderModeASCII {
+		tr = i18n.New("en")
+	}
+
+	styles := stylesForMode(mode)
+
 	var sb strings.Builder
 
-	sb.WriteString(titleStyle.Render(tr.T("title")))
+	sb.WriteString(styles.titleStyle.Render(displayText(tr.T("title"), mode)))
 	sb.WriteString("\n")
 
 	// --- Weekly usage & rate limit cards ---
@@ -84,42 +164,52 @@ func Render(usages *api.GetUsagesResponse, sub *api.GetSubscriptionResponse, tr 
 	if len(usages.Usages) > 0 {
 		u := usages.Usages[0]
 
-		card1 = buildUsageCard(tr.T("weekly_usage"), u.Detail, "", tr, showProgress)
+		card1 = buildUsageCard(tr.T("weekly_usage"), u.Detail, "", tr, showProgress, styles)
 
 		if len(u.Limits) > 0 {
 			limit := u.Limits[0]
 			windowText := formatWindow(limit.Window)
-			card2 = buildUsageCard(tr.T("rate_limit"), limit.Detail, windowText, tr, showProgress)
+			card2 = buildUsageCard(tr.T("rate_limit"), limit.Detail, windowText, tr, showProgress, styles)
 		} else {
-			card2 = buildUsageCard(tr.T("rate_limit"), api.UsageDetail{}, "", tr, showProgress)
+			card2 = buildUsageCard(tr.T("rate_limit"), api.UsageDetail{}, "", tr, showProgress, styles)
 		}
 	} else {
-		card1 = buildUsageCard(tr.T("weekly_usage"), api.UsageDetail{}, "", tr, showProgress)
-		card2 = buildUsageCard(tr.T("rate_limit"), api.UsageDetail{}, "", tr, showProgress)
+		card1 = buildUsageCard(tr.T("weekly_usage"), api.UsageDetail{}, "", tr, showProgress, styles)
+		card2 = buildUsageCard(tr.T("rate_limit"), api.UsageDetail{}, "", tr, showProgress, styles)
 	}
 
 	sb.WriteString(lipgloss.JoinHorizontal(lipgloss.Top, card1, " ", card2))
 	sb.WriteString("\n")
 
 	// --- My benefits ---
-	sb.WriteString(sectionTitleStyle.Render(tr.T("my_benefits")))
+	sb.WriteString(styles.sectionTitleStyle.Render(displayText(tr.T("my_benefits"), mode)))
 	sb.WriteString("\n")
-	sb.WriteString(buildSubscriptionBox(sub, tr))
+	sb.WriteString(buildSubscriptionBox(sub, tr, styles))
 	sb.WriteString("\n")
 
 	// --- Model permissions ---
-	sb.WriteString(sectionTitleStyle.Render(tr.T("model_permissions")))
+	sb.WriteString(styles.sectionTitleStyle.Render(displayText(tr.T("model_permissions"), mode)))
 	sb.WriteString("\n")
 
 	if sub != nil {
-		sb.WriteString(buildCapabilityTable(sub.Capabilities, tr))
+		sb.WriteString(buildCapabilityTable(sub.Capabilities, tr, styles))
 	} else {
-		sb.WriteString(buildCapabilityTable(nil, tr))
+		sb.WriteString(buildCapabilityTable(nil, tr, styles))
 	}
 
 	sb.WriteString("\n")
 
 	return sb.String()
+}
+
+func displayText(text string, mode RenderMode) string {
+	if mode != RenderModeASCII {
+		return text
+	}
+
+	replacer := strings.NewReplacer("🌙 ", "", "💎 ", "", "🤖 ", "")
+
+	return replacer.Replace(text)
 }
 
 func formatWindow(window api.LimitWindow) string {
@@ -141,32 +231,32 @@ func formatWindow(window api.LimitWindow) string {
 	}
 }
 
-func buildUsageCard(title string, detail api.UsageDetail, extra string, tr *i18n.I18n, showProgress bool) string {
+func buildUsageCard(title string, detail api.UsageDetail, extra string, tr *i18n.I18n, showProgress bool, styles renderStyles) string {
 	var content strings.Builder
 
-	content.WriteString(cardTitleStyle.Render(title))
+	content.WriteString(styles.cardTitleStyle.Render(title))
 	content.WriteString("\n")
 
 	if detail.Limit == "" {
-		content.WriteString(cardLabelStyle.Render(tr.T("no_data")))
-		return cardStyle.Render(content.String())
+		content.WriteString(styles.cardLabelStyle.Render(tr.T("no_data")))
+		return styles.cardStyle.Render(content.String())
 	}
 
 	if showProgress {
-		content.WriteString(cardLabelStyle.Render(tr.T("remaining_total")))
+		content.WriteString(styles.cardLabelStyle.Render(tr.T("remaining_total")))
 		content.WriteString("\n")
-		content.WriteString(renderProgressBar(detail.Remaining, detail.Limit, 18))
+		content.WriteString(renderProgressBar(detail.Remaining, detail.Limit, 18, styles))
 	} else {
 		fmt.Fprintf(&content, "%s  %s",
-			cardLabelStyle.Render(tr.T("remaining_total")),
-			cardValueStyle.Render(fmt.Sprintf("%s / %s", detail.Remaining, detail.Limit)),
+			styles.cardLabelStyle.Render(tr.T("remaining_total")),
+			styles.cardValueStyle.Render(fmt.Sprintf("%s / %s", detail.Remaining, detail.Limit)),
 		)
 	}
 
 	if extra != "" {
 		fmt.Fprintf(&content, "\n%s  %s",
-			cardLabelStyle.Render(tr.T("window")),
-			cardValueStyle.Render(extra),
+			styles.cardLabelStyle.Render(tr.T("window")),
+			styles.cardValueStyle.Render(extra),
 		)
 	} else {
 		content.WriteString("\n")
@@ -176,17 +266,17 @@ func buildUsageCard(title string, detail api.UsageDetail, extra string, tr *i18n
 	if err == nil && !reset.IsZero() {
 		hours := max(int(time.Until(reset).Hours()), 0)
 		fmt.Fprintf(&content, "\n%s  %s",
-			cardLabelStyle.Render(tr.T("reset_time")),
-			cardValueStyle.Render(tr.T("hours_later", hours)),
+			styles.cardLabelStyle.Render(tr.T("reset_time")),
+			styles.cardValueStyle.Render(tr.T("hours_later", hours)),
 		)
 	}
 
-	return cardStyle.Render(content.String())
+	return styles.cardStyle.Render(content.String())
 }
 
-func buildSubscriptionBox(sub *api.GetSubscriptionResponse, tr *i18n.I18n) string {
+func buildSubscriptionBox(sub *api.GetSubscriptionResponse, tr *i18n.I18n, styles renderStyles) string {
 	if sub == nil {
-		return boxStyle.Render(tr.T("no_data"))
+		return styles.boxStyle.Render(tr.T("no_data"))
 	}
 
 	var content strings.Builder
@@ -197,15 +287,15 @@ func buildSubscriptionBox(sub *api.GetSubscriptionResponse, tr *i18n.I18n) strin
 	}
 
 	fmt.Fprintf(&content, "%s  %s\n",
-		cardLabelStyle.Render(tr.T("current_plan")),
-		planNameStyle.Render(planName),
+		styles.cardLabelStyle.Render(tr.T("current_plan")),
+		styles.planNameStyle.Render(planName),
 	)
 
 	endTime, err := time.Parse(time.RFC3339Nano, sub.Subscription.CurrentEndTime)
 	if err == nil && !endTime.IsZero() {
 		fmt.Fprintf(&content, "%s  %s\n",
-			cardLabelStyle.Render(tr.T("valid_until")),
-			dateStyle.Render(endTime.Format("2006-01-02")),
+			styles.cardLabelStyle.Render(tr.T("valid_until")),
+			styles.dateStyle.Render(endTime.Format("2006-01-02")),
 		)
 	}
 
@@ -213,19 +303,24 @@ func buildSubscriptionBox(sub *api.GetSubscriptionResponse, tr *i18n.I18n) strin
 		b := sub.Balances[0]
 		ratio := b.AmountUsedRatio * 100
 		color := gradientGreenToRed(b.AmountUsedRatio)
-		style := lipgloss.NewStyle().Foreground(lipgloss.Color(color))
+
+		style := styles.cardValueStyle
+		if styles.progressFilled == "█" {
+			style = lipgloss.NewStyle().Foreground(lipgloss.Color(color))
+		}
+
 		fmt.Fprintf(&content, "%s  %s",
-			cardLabelStyle.Render(tr.T("usage_ratio")),
+			styles.cardLabelStyle.Render(tr.T("usage_ratio")),
 			style.Render(fmt.Sprintf("%.2f%%", ratio)),
 		)
 	}
 
-	return boxStyle.Render(content.String())
+	return styles.boxStyle.Render(content.String())
 }
 
-func buildCapabilityTable(caps []api.Capability, tr *i18n.I18n) string {
+func buildCapabilityTable(caps []api.Capability, tr *i18n.I18n, styles renderStyles) string {
 	if len(caps) == 0 {
-		return boxStyle.Render(tr.T("no_data"))
+		return styles.boxStyle.Render(tr.T("no_data"))
 	}
 
 	nameWidth := 28
@@ -233,16 +328,16 @@ func buildCapabilityTable(caps []api.Capability, tr *i18n.I18n) string {
 
 	rows := make([]string, 0, len(caps)+1)
 	rows = append(rows, lipgloss.JoinHorizontal(lipgloss.Left,
-		headerStyle.Width(nameWidth).Render(tr.T("feature")),
-		headerStyle.Width(paraWidth).Render(tr.T("parallelism")),
+		styles.headerStyle.Width(nameWidth).Render(tr.T("feature")),
+		styles.headerStyle.Width(paraWidth).Render(tr.T("parallelism")),
 	))
 
 	for i, c := range caps {
 		name := featureName(c.Feature, tr)
 
-		rowStyle := rowOddStyle
+		rowStyle := styles.rowOddStyle
 		if i%2 == 0 {
-			rowStyle = rowEvenStyle
+			rowStyle = styles.rowEvenStyle
 		}
 
 		row := lipgloss.JoinHorizontal(lipgloss.Left,
@@ -254,11 +349,7 @@ func buildCapabilityTable(caps []api.Capability, tr *i18n.I18n) string {
 
 	table := lipgloss.JoinVertical(lipgloss.Left, rows...)
 
-	return lipgloss.NewStyle().
-		Border(lipgloss.RoundedBorder()).
-		BorderForeground(lipgloss.Color("#5B5B5B")).
-		Padding(0, 1).
-		Render(table)
+	return styles.boxStyle.Render(table)
 }
 
 func featureName(feature string, tr *i18n.I18n) string {
@@ -307,7 +398,7 @@ func gradientGreenToRed(ratio float64) string {
 	return fmt.Sprintf("#%02X%02X%02X", r, g, b)
 }
 
-func renderProgressBar(remainingStr, limitStr string, width int) string {
+func renderProgressBar(remainingStr, limitStr string, width int, styles renderStyles) string {
 	rem, err1 := strconv.ParseFloat(remainingStr, 64)
 
 	lim, err2 := strconv.ParseFloat(limitStr, 64)
@@ -327,8 +418,8 @@ func renderProgressBar(remainingStr, limitStr string, width int) string {
 	filled := int(ratio * float64(width))
 	empty := width - filled
 
-	bar := progressFilledStyle.Render(strings.Repeat("█", filled)) +
-		progressEmptyStyle.Render(strings.Repeat("░", empty))
+	bar := styles.progressFilledStyle.Render(strings.Repeat(styles.progressFilled, filled)) +
+		styles.progressEmptyStyle.Render(strings.Repeat(styles.progressEmpty, empty))
 
 	return fmt.Sprintf("%s  %.0f%%", bar, ratio*100)
 }

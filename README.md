@@ -21,6 +21,7 @@ A beautiful CLI tool to display your **Kimi Code Console** stats in the terminal
 - **Current Plan & Validity** – cached until the subscription expires
 - **Model Permissions** – cached until the subscription expires
 - Beautiful Unicode-box UI powered by [Lipgloss](https://github.com/charmbracelet/lipgloss)
+- Automatic ASCII fallback for non-modern terminals, with environment overrides
 - Multilingual output: **Chinese (default)**, Traditional Chinese, English, and Japanese
 - Mock mode for safe testing without hitting real APIs
 
@@ -133,10 +134,15 @@ other options.
 | `KIME_SESSION_ID` | Session ID |
 | `KIME_USER_ID` | User ID |
 | `KIME_LANG` | UI language: `zh`, `zh_TW`, `en`, or `ja` |
+| `KIME_RENDER_MODE` | Render mode: `auto` (default), `unicode`, or `ascii` |
 | `KIME_MOCK` | Set to `1` to enable mock mode (no real API calls) |
 | `KIME_FORCE_REFRESH` | Set to `1` to force a full refresh and update cache |
 
 If `device_id` or `user_id` is missing, `kime` will try to extract them from the JWT payload automatically.
+
+ASCII rendering uses English labels and ASCII-only decorations so it remains readable in non-UTF-8 terminals.
+
+When both config and environment variables are present, environment variables take precedence.
 
 ---
 
@@ -155,6 +161,9 @@ KIME_LANG=en kime check   # or set "language": "en" in config
 
 # Mock mode (no network requests)
 KIME_MOCK=1 kime check
+
+# Force ASCII rendering
+KIME_RENDER_MODE=ascii kime check
 
 # Force refresh (bypass cache and update it)
 KIME_FORCE_REFRESH=1 kime check

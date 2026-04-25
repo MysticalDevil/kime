@@ -4,11 +4,19 @@ This document describes the Kimi Code Console backend APIs used by `kime`.
 
 ## Base URL
 
-```
+```text
 https://www.kimi.com
 ```
 
 All endpoints below are prefixed with this base URL.
+
+---
+
+## Runtime Behavior
+
+- Credential precedence is: environment variables first, config file second, JWT auto-extraction last.
+- `kime` only uses `KIME_RENDER_MODE` for terminal rendering. It does not affect API requests.
+- ASCII render mode falls back to English labels so output stays ASCII-only on non-UTF-8 terminals.
 
 ---
 

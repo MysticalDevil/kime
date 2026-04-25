@@ -69,6 +69,47 @@ func TestRender_ProgressBar(t *testing.T) {
 	}
 }
 
+func TestRenderWithMode_ASCII(t *testing.T) {
+	usages := &api.GetUsagesResponse{
+		Usages: []api.Usage{
+			{
+				Detail: api.UsageDetail{Limit: "100", Remaining: "50"},
+				Limits: []api.UsageLimit{
+					{
+						Window: api.LimitWindow{Duration: 30, TimeUnit: "TIME_UNIT_SECOND"},
+						Detail: api.UsageDetail{Limit: "100", Remaining: "25"},
+					},
+				},
+			},
+		},
+	}
+	sub := &api.GetSubscriptionResponse{
+		Subscription: api.Subscription{
+			Goods: api.Goods{Title: "Allegretto"},
+		},
+		Balances: []api.Balance{
+			{AmountUsedRatio: 0.5},
+		},
+		Capabilities: []api.Capability{
+			{Feature: "FEATURE_CODING", Constraint: api.Constraint{Parallelism: 20}},
+		},
+	}
+
+	output := RenderWithMode(usages, sub, i18n.New("zh"), true, RenderModeASCII)
+
+	for _, r := range output {
+		if r > 127 {
+			t.Fatalf("ASCII output contains non-ASCII rune %q in:\n%s", r, output)
+		}
+	}
+
+	for _, want := range []string{"+", "-", "|", "#", ".", "30s"} {
+		if !strings.Contains(output, want) {
+			t.Errorf("ASCII output missing %q", want)
+		}
+	}
+}
+
 func TestRender_NilSubscription(t *testing.T) {
 	usages := &api.GetUsagesResponse{}
 	tr := i18n.New("zh")

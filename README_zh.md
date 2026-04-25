@@ -21,6 +21,7 @@
 - **当前套餐 & 有效期** – 本地缓存到套餐有效期截止日
 - **模型权限** – 本地缓存到套餐有效期截止日
 - 使用 [Lipgloss](https://github.com/charmbracelet/lipgloss) 绘制的 Unicode 圆角边框与彩色 UI
+- 在非现代终端中自动降级为 ASCII 渲染，并支持环境变量覆盖
 - 多语言输出：**简体中文（默认）**、繁体中文、英文和日文
 - Mock 模式，测试时不触发真实 API 请求
 
@@ -130,10 +131,15 @@ kime init
 | `KIME_SESSION_ID` | 会话 ID |
 | `KIME_USER_ID` | 用户 ID |
 | `KIME_LANG` | 界面语言：`zh`、`zh_TW`、`en`、`ja` |
+| `KIME_RENDER_MODE` | 渲染模式：`auto`（默认）、`unicode` 或 `ascii` |
 | `KIME_MOCK` | 设为 `1` 开启 Mock 模式（不请求真实 API） |
 | `KIME_FORCE_REFRESH` | 设为 `1` 强制刷新全部内容并更新缓存 |
 
 如果 `device_id` 或 `user_id` 缺失，`kime` 会自动尝试从 JWT payload 中解码提取。
+
+ASCII 渲染会使用英文标签和纯 ASCII 装饰，以便在非 UTF-8 终端中保持可读。
+
+当配置文件和环境变量同时存在时，环境变量优先。
 
 ---
 
@@ -148,11 +154,13 @@ kime --help
 kime check
 
 # 英文界面
-# 修改配置文件中的 "language" 为 "en"
-kime check
+KIME_LANG=en kime check
 
 # Mock 模式（不发起网络请求）
 KIME_MOCK=1 kime check
+
+# 强制 ASCII 渲染
+KIME_RENDER_MODE=ascii kime check
 
 # 强制刷新（跳过缓存并重新写入）
 KIME_FORCE_REFRESH=1 kime check

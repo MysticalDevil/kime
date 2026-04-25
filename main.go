@@ -126,11 +126,13 @@ func runCheck() {
 		showProgress = cfg.ShowProgress
 	}
 
-	output := ui.Render(usages, sub, tr, showProgress)
+	output := ui.RenderWithMode(usages, sub, tr, showProgress, ui.ResolveRenderMode())
 	fmt.Println(output)
 }
 
 func printHelp() {
+	mode := ui.ResolveRenderMode()
+
 	var (
 		accent = lipgloss.Color("#90EE90")
 		muted  = lipgloss.Color("#A0A0A0")
@@ -138,29 +140,50 @@ func printHelp() {
 		white  = lipgloss.Color("#FAFAFA")
 	)
 
+	border := lipgloss.RoundedBorder()
+	if mode == ui.RenderModeASCII {
+		border = lipgloss.ASCIIBorder()
+	}
+
 	headerBox := lipgloss.NewStyle().
-		Border(lipgloss.RoundedBorder()).
-		BorderForeground(accent).
+		Border(border).
 		Padding(0, 1).
 		Width(54)
+	if mode != ui.RenderModeASCII {
+		headerBox = headerBox.BorderForeground(accent)
+	}
 
 	sectionStyle := lipgloss.NewStyle().
-		Bold(true).
-		Foreground(accent).
 		MarginTop(1).
 		MarginBottom(0)
+	if mode != ui.RenderModeASCII {
+		sectionStyle = sectionStyle.Bold(true).Foreground(accent)
+	}
 
 	keyStyle := lipgloss.NewStyle().
-		Bold(true).
-		Foreground(white).
 		Width(20).
 		Align(lipgloss.Left)
+	if mode != ui.RenderModeASCII {
+		keyStyle = keyStyle.Bold(true).Foreground(white)
+	}
 
-	valStyle := lipgloss.NewStyle().
-		Foreground(muted)
+	valStyle := lipgloss.NewStyle()
+	if mode != ui.RenderModeASCII {
+		valStyle = valStyle.Foreground(muted)
+	}
 
 	// Header
-	title := lipgloss.NewStyle().Bold(true).Foreground(white).Render("🌙 kime " + version)
+	titleText := "🌙 kime " + version
+	if mode == ui.RenderModeASCII {
+		titleText = "kime " + version
+	}
+
+	titleStyle := lipgloss.NewStyle()
+	if mode != ui.RenderModeASCII {
+		titleStyle = titleStyle.Bold(true).Foreground(white)
+	}
+
+	title := titleStyle.Render(titleText)
 	subtitle := valStyle.Render("Display your Kimi Code Console stats in the terminal.")
 	fmt.Println(headerBox.Render(lipgloss.JoinVertical(lipgloss.Left, title, subtitle)))
 
@@ -195,6 +218,7 @@ func printHelp() {
 		{"KIME_SESSION_ID", "Session ID header"},
 		{"KIME_USER_ID", "User ID (traffic ID)"},
 		{"KIME_LANG", "UI language: zh, zh_TW, en, ja"},
+		{"KIME_RENDER_MODE", "Render mode: auto, unicode, ascii"},
 		{"KIME_MOCK", "Set to 1 to enable mock mode (no API calls)"},
 		{"KIME_FORCE_REFRESH", "Set to 1 to force a full refresh and update cache"},
 	}
@@ -203,7 +227,12 @@ func printHelp() {
 	}
 
 	// Footer
-	fmt.Println(lipgloss.NewStyle().Foreground(dim).MarginTop(1).Render("Build Note: This project requires GOEXPERIMENT=jsonv2."))
+	footerStyle := lipgloss.NewStyle().MarginTop(1)
+	if mode != ui.RenderModeASCII {
+		footerStyle = footerStyle.Foreground(dim)
+	}
+
+	fmt.Println(footerStyle.Render("Build Note: This project requires GOEXPERIMENT=jsonv2."))
 }
 
 func isForceRefresh() bool {
