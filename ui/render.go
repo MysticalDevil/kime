@@ -70,6 +70,8 @@ var (
 
 	planNameStyle = lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("#00D26A"))
 	dateStyle     = lipgloss.NewStyle().Foreground(lipgloss.Color("#FFFFFF"))
+
+	asciiTextReplacer = strings.NewReplacer("🌙 ", "", "💎 ", "", "🤖 ", "")
 )
 
 type renderStyles struct {
@@ -213,9 +215,7 @@ func displayText(text string, mode RenderMode) string {
 		return text
 	}
 
-	replacer := strings.NewReplacer("🌙 ", "", "💎 ", "", "🤖 ", "")
-
-	return replacer.Replace(text)
+	return asciiTextReplacer.Replace(text)
 }
 
 func formatWindow(window api.LimitWindow) string {
