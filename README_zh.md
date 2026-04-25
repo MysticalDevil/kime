@@ -209,7 +209,6 @@ kime --help
 kime check
 
 # 英文界面
-KIME_LANG=en kime check
 KIME_LANG=en kime check   # 或在配置文件中将 "language" 设为 "en"
 
 # Mock 模式（不发起网络请求）
