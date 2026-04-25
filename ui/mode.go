@@ -33,29 +33,16 @@ func ParseRenderMode(value string) (RenderMode, bool) {
 
 // ResolveRenderMode resolves KIME_RENDER_MODE into a concrete render mode.
 func ResolveRenderMode() RenderMode {
-	if mode, ok := ParseRenderMode(getenv("KIME_RENDER_MODE")); ok && mode != RenderModeAuto {
+	if mode, ok := ParseRenderMode(os.Getenv("KIME_RENDER_MODE")); ok && mode != RenderModeAuto {
 		return mode
 	}
 
-	if shouldUseASCII(environ()) {
+	if shouldUseASCII(os.Environ()) {
 		return RenderModeASCII
 	}
 
 	return RenderModeUnicode
 }
-
-var getenv = func(key string) string {
-	for _, item := range environ() {
-		envKey, value, ok := strings.Cut(item, "=")
-		if ok && envKey == key {
-			return value
-		}
-	}
-
-	return ""
-}
-
-var environ = os.Environ
 
 func shouldUseASCII(environ []string) bool {
 	env := map[string]string{}

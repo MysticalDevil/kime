@@ -1,32 +1,6 @@
 package ui
 
-import (
-	"strings"
-	"testing"
-)
-
-func withEnv(environValues []string, fn func()) {
-	origEnviron := environ
-	origGetenv := getenv
-	environ = func() []string { return environValues }
-	getenv = func(key string) string {
-		for _, item := range environValues {
-			envKey, value, ok := strings.Cut(item, "=")
-			if ok && envKey == key {
-				return value
-			}
-		}
-
-		return ""
-	}
-
-	defer func() {
-		environ = origEnviron
-		getenv = origGetenv
-	}()
-
-	fn()
-}
+import "testing"
 
 func TestParseRenderMode(t *testing.T) {
 	tests := []struct {
@@ -74,8 +48,28 @@ func TestShouldUseASCII(t *testing.T) {
 			want:    true,
 		},
 		{
+			name:    "empty term",
+			environ: []string{"TERM=", "LANG=en_US.UTF-8"},
+			want:    true,
+		},
+		{
+			name:    "missing term",
+			environ: []string{"LANG=en_US.UTF-8"},
+			want:    true,
+		},
+		{
+			name:    "unknown terminal",
+			environ: []string{"TERM=unknown", "LANG=en_US.UTF-8"},
+			want:    true,
+		},
+		{
 			name:    "modern terminal",
 			environ: []string{"TERM=xterm-256color", "LANG=en_US.UTF-8"},
+			want:    false,
+		},
+		{
+			name:    "lc all utf8 overrides lang c",
+			environ: []string{"TERM=xterm-256color", "LC_ALL=en_US.UTF-8", "LANG=C"},
 			want:    false,
 		},
 	}
@@ -89,14 +83,32 @@ func TestShouldUseASCII(t *testing.T) {
 	}
 }
 
-func TestResolveRenderMode_EnvOverride(t *testing.T) {
-	withEnv([]string{
-		"KIME_RENDER_MODE=ascii",
-		"TERM=xterm-256color",
-		"LANG=en_US.UTF-8",
-	}, func() {
-		if got := ResolveRenderMode(); got != RenderModeASCII {
-			t.Errorf("ResolveRenderMode() = %q, want %q", got, RenderModeASCII)
-		}
-	})
+func TestResolveRenderMode_EnvOverrideASCII(t *testing.T) {
+	t.Setenv("KIME_RENDER_MODE", "ascii")
+	t.Setenv("TERM", "xterm-256color")
+	t.Setenv("LANG", "en_US.UTF-8")
+
+	if got := ResolveRenderMode(); got != RenderModeASCII {
+		t.Errorf("ResolveRenderMode() = %q, want %q", got, RenderModeASCII)
+	}
+}
+
+func TestResolveRenderMode_EnvOverrideUnicode(t *testing.T) {
+	t.Setenv("KIME_RENDER_MODE", "unicode")
+	t.Setenv("TERM", "dumb")
+	t.Setenv("LANG", "C")
+
+	if got := ResolveRenderMode(); got != RenderModeUnicode {
+		t.Errorf("ResolveRenderMode() = %q, want %q", got, RenderModeUnicode)
+	}
+}
+
+func TestResolveRenderMode_InvalidEnvFallsBackToAuto(t *testing.T) {
+	t.Setenv("KIME_RENDER_MODE", "bogus")
+	t.Setenv("TERM", "dumb")
+	t.Setenv("LANG", "en_US.UTF-8")
+
+	if got := ResolveRenderMode(); got != RenderModeASCII {
+		t.Errorf("ResolveRenderMode() = %q, want %q", got, RenderModeASCII)
+	}
 }
