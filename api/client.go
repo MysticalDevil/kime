@@ -55,10 +55,10 @@ func resolveCredentials(cfg *config.Config) (token, deviceID, sessionID, traffic
 		trafficID = cfg.UserID
 	}
 
-	token = cmp.Or(token, os.Getenv("KIME_TOKEN"))
-	deviceID = cmp.Or(deviceID, os.Getenv("KIME_DEVICE_ID"))
-	sessionID = cmp.Or(sessionID, os.Getenv("KIME_SESSION_ID"))
-	trafficID = cmp.Or(trafficID, os.Getenv("KIME_USER_ID"))
+	token = cmp.Or(os.Getenv("KIME_TOKEN"), token)
+	deviceID = cmp.Or(os.Getenv("KIME_DEVICE_ID"), deviceID)
+	sessionID = cmp.Or(os.Getenv("KIME_SESSION_ID"), sessionID)
+	trafficID = cmp.Or(os.Getenv("KIME_USER_ID"), trafficID)
 
 	if token == "" {
 		return "", "", "", "", fmt.Errorf("no auth token found, please set KIME_TOKEN env or create config")
