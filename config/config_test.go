@@ -4,6 +4,8 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"os"
+	"path/filepath"
 	"testing"
 )
 
@@ -44,5 +46,57 @@ func TestExtractJWTClaims_Invalid(t *testing.T) {
 	_, err := ExtractJWTClaims("invalid")
 	if err == nil {
 		t.Error("expected error for invalid jwt")
+	}
+}
+
+func TestSaveAndLoad(t *testing.T) {
+	dir := t.TempDir()
+	origHome := os.Getenv("HOME")
+
+	if err := os.Setenv("HOME", dir); err != nil {
+		t.Fatalf("Setenv failed: %v", err)
+	}
+
+	defer func() {
+		if err := os.Setenv("HOME", origHome); err != nil {
+			t.Fatalf("Setenv failed: %v", err)
+		}
+	}()
+
+	cfg := &Config{
+		Token:        "tok",
+		DeviceID:     "dev",
+		SessionID:    "sess",
+		UserID:       "usr",
+		Language:     "en",
+		ShowProgress: true,
+	}
+
+	if err := Save(cfg); err != nil {
+		t.Fatalf("Save failed: %v", err)
+	}
+
+	path := filepath.Join(dir, ".config", "kime", "config.json")
+
+	info, err := os.Stat(path)
+	if err != nil {
+		t.Fatalf("Stat failed: %v", err)
+	}
+
+	if got := info.Mode().Perm(); got != 0o600 {
+		t.Errorf("mode = %v, want 0600", got)
+	}
+
+	if _, err := os.Stat(path + ".tmp"); !os.IsNotExist(err) {
+		t.Fatalf("temporary file still exists: %v", err)
+	}
+
+	loaded, err := Load()
+	if err != nil {
+		t.Fatalf("Load failed: %v", err)
+	}
+
+	if *loaded != *cfg {
+		t.Errorf("Load() = %+v, want %+v", loaded, cfg)
 	}
 }

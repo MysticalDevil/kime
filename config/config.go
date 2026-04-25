@@ -100,11 +100,12 @@ func Save(cfg *Config) error {
 
 	b := buf.Bytes()
 
-	if err != nil {
+	tmpPath := path + ".tmp"
+	if err := os.WriteFile(tmpPath, b, 0o600); err != nil {
 		return err
 	}
 
-	return os.WriteFile(path, b, 0o600)
+	return os.Rename(tmpPath, path)
 }
 
 // ExtractJWTClaims extracts fields from JWT payload without verifying signature.
