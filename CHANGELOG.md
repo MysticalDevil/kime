@@ -1,5 +1,16 @@
 # Changelog
 
+## v1.1.4 - 2026-04-26
+
+### What's Changed
+
+- **fix**: Config atomic writes now clean up the temporary file when `os.Rename` fails.
+- **fix**: Render mode detection now uses `os.Getenv`/`os.Environ` directly instead of custom wrapper functions.
+- **fix**: `modeUsesUnicode` now checks an explicit `RenderMode` field instead of inferring from the progress-bar character.
+- **refactor**: `displayText` now reuses a package-level `strings.Replacer` for ASCII emoji stripping.
+- **test**: Expanded `TestShouldUseASCII` and `TestResolveRenderMode` with edge cases for empty TERM, unknown terminal, `LC_ALL` precedence, and invalid env fallback.
+- **docs**: Removed duplicate usage example in `README_zh.md`.
+
 ## v1.1.3 - 2026-04-26
 
 ### What's Changed
