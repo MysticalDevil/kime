@@ -125,7 +125,12 @@ func Save(cfg *Config) error {
 		return err
 	}
 
-	return os.Rename(tmpPath, path)
+	if err := os.Rename(tmpPath, path); err != nil {
+		_ = os.Remove(tmpPath)
+		return err
+	}
+
+	return nil
 }
 
 // ExtractJWTClaims extracts fields from JWT payload without verifying signature.
