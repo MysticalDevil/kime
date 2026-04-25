@@ -47,6 +47,8 @@ mise use -g github:MysticalDevil/kime@latest
 
 ### 源码构建
 
+类 Unix 系统：
+
 ```bash
 git clone https://github.com/MysticalDevil/kime.git
 cd kime
@@ -60,11 +62,54 @@ GOEXPERIMENT=jsonv2 go build -o kime
 mv kime ~/.local/bin/
 ```
 
+Windows PowerShell：
+
+```powershell
+git clone https://github.com/MysticalDevil/kime.git
+cd kime
+go mod tidy
+$env:GOEXPERIMENT = "jsonv2"
+go build -o kime.exe .
+New-Item -ItemType Directory -Force "$HOME\bin" | Out-Null
+Move-Item .\kime.exe "$HOME\bin\kime.exe"
+$env:Path = "$HOME\bin;$env:Path"
+```
+
+Windows 二进制文件名为 `kime.exe`。
+
+### 开发命令
+
+本仓库使用 `just` 作为任务入口：
+
+```bash
+just fmt         # 使用 gofumpt 格式化
+just fmt-check   # 仅检查格式
+just lint        # 运行带 --fix 的 golangci-lint
+just lint-check  # CI 风格 lint 检查
+just test        # 运行全部测试
+just coverage    # 执行覆盖率门槛检查
+just check       # 一次性执行 fmt + lint-check + test + coverage
+```
+
+当前 CI 覆盖率门槛为：**73%** 总覆盖率。
+
 ---
 
 ## 配置
 
-`kime` 从 `~/.config/kime/config.json` 读取凭证（可手动创建，也可通过浏览器自动提取）。
+`kime` 会从平台对应的配置目录读取凭证：
+
+- Linux：`~/.config/kime/config.json`
+- macOS：`~/Library/Application Support/kime/config.json`
+- Windows：`%AppData%\kime\config.json`
+
+缓存文件也会按平台放置：
+
+- Linux：`~/.cache/kime/membership.json`
+- macOS：`~/Library/Caches/kime/membership.json`
+- Windows：`%LocalAppData%\kime\membership.json`
+
+这些文件会在需要时自动创建，也可以手动创建。
 
 ### 交互式配置
 
@@ -75,6 +120,14 @@ kime init
 ```
 
 向导会提示你输入 token，并自动从 JWT 中解析 `device_id`、`session_id` 和 `user_id`。你还可以设置偏好语言等选项。
+
+Windows PowerShell：
+
+```powershell
+.\kime.exe init
+```
+
+`kime init` 需要交互式终端；如果在非 TTY 场景下运行，会返回明确错误。
 
 ### 如何获取凭证（开发者工具）
 
@@ -134,6 +187,8 @@ kime init
 | `KIME_RENDER_MODE` | 渲染模式：`auto`（默认）、`unicode` 或 `ascii` |
 | `KIME_MOCK` | 设为 `1` 开启 Mock 模式（不请求真实 API） |
 | `KIME_FORCE_REFRESH` | 设为 `1` 强制刷新全部内容并更新缓存 |
+| `KIME_CONFIG_DIR` | 覆盖配置目录路径 |
+| `KIME_CACHE_DIR` | 覆盖缓存目录路径 |
 
 如果 `device_id` 或 `user_id` 缺失，`kime` 会自动尝试从 JWT payload 中解码提取。
 
@@ -155,6 +210,7 @@ kime check
 
 # 英文界面
 KIME_LANG=en kime check
+KIME_LANG=en kime check   # 或在配置文件中将 "language" 设为 "en"
 
 # Mock 模式（不发起网络请求）
 KIME_MOCK=1 kime check
@@ -166,15 +222,37 @@ KIME_RENDER_MODE=ascii kime check
 KIME_FORCE_REFRESH=1 kime check
 ```
 
+Windows PowerShell：
+
+```powershell
+.\kime.exe --help
+.\kime.exe check
+$env:KIME_LANG = "en"; .\kime.exe check
+$env:KIME_MOCK = "1"; .\kime.exe check
+$env:KIME_FORCE_REFRESH = "1"; .\kime.exe check
+```
+
 ---
 
 ## 缓存
 
-- **缓存文件**: `~/.cache/kime/membership.json`
+- **缓存文件**:
+  Linux `~/.cache/kime/membership.json`
+  macOS `~/Library/Caches/kime/membership.json`
+  Windows `%LocalAppData%\kime\membership.json`
 - **有效期**: 到 `subscription.currentEndTime`（当前套餐有效期截止日）
 - "当前套餐"、"有效期" 和 "模型权限" 在套餐有效期内直接读取本地缓存。
 - "本周用量"、"频限明细" 和 "额度使用" 始终实时请求。
 - 设置 `KIME_FORCE_REFRESH=1` 可跳过缓存，强制全量更新。
+
+---
+
+## 平台支持
+
+- 支持的目标系统：Linux、macOS、Windows
+- Windows 主要支持的终端：Windows Terminal
+- Windows 推荐 Shell：PowerShell 7
+- `cmd.exe` 与旧版 Windows 控制台不在支持范围内
 
 ---
 

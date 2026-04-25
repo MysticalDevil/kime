@@ -1,4 +1,5 @@
-// Package api provides an HTTP client for the Kimi Code Console backend.
+// Package api provides an HTTP client, service wrappers, and request/response
+// types for the Kimi Code Console backend.
 package api
 
 import (
@@ -31,6 +32,14 @@ type Client struct {
 
 // NewClient creates a Client using the provided config, environment variables or JWT claims.
 func NewClient(cfg *config.Config) (*Client, error) {
+	if IsMock() {
+		return &Client{
+			hc: &http.Client{
+				Timeout: 30 * time.Second,
+			},
+		}, nil
+	}
+
 	token, deviceID, sessionID, trafficID, err := resolveCredentials(cfg)
 	if err != nil {
 		return nil, err

@@ -20,7 +20,6 @@ func TestFillFromJWT(t *testing.T) {
 		t.Errorf("fillFromJWT = (%q, %q, %q), want (d123, s456, u789)", deviceID, sessionID, trafficID)
 	}
 
-	// existing values should not be overwritten
 	deviceID, _, _ = fillFromJWT(token, "existing", "", "")
 	if deviceID != "existing" {
 		t.Errorf("deviceID = %q, want existing", deviceID)
@@ -51,16 +50,16 @@ func TestResolveCredentials_FromEnv(t *testing.T) {
 }
 
 func TestResolveCredentials_EnvOverridesConfig(t *testing.T) {
-	t.Setenv("KIME_TOKEN", "env-token")
+	t.Setenv("KIME_TOKEN", "env-tok")
 	t.Setenv("KIME_DEVICE_ID", "env-dev")
-	t.Setenv("KIME_USER_ID", "env-user")
-	t.Setenv("KIME_SESSION_ID", "env-session")
+	t.Setenv("KIME_USER_ID", "env-usr")
+	t.Setenv("KIME_SESSION_ID", "env-sess")
 
 	cfg := &config.Config{
-		Token:     "cfg-token",
+		Token:     "cfg-tok",
 		DeviceID:  "cfg-dev",
-		UserID:    "cfg-user",
-		SessionID: "cfg-session",
+		SessionID: "cfg-sess",
+		UserID:    "cfg-usr",
 	}
 
 	token, deviceID, sessionID, trafficID, err := resolveCredentials(cfg)
@@ -68,8 +67,20 @@ func TestResolveCredentials_EnvOverridesConfig(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-	if token != "env-token" || deviceID != "env-dev" || sessionID != "env-session" || trafficID != "env-user" {
-		t.Errorf("unexpected credentials: %q %q %q %q", token, deviceID, sessionID, trafficID)
+	if token != "env-tok" {
+		t.Errorf("token = %q, want env-tok", token)
+	}
+
+	if deviceID != "env-dev" {
+		t.Errorf("deviceID = %q, want env-dev", deviceID)
+	}
+
+	if sessionID != "env-sess" {
+		t.Errorf("sessionID = %q, want env-sess", sessionID)
+	}
+
+	if trafficID != "env-usr" {
+		t.Errorf("trafficID = %q, want env-usr", trafficID)
 	}
 }
 
@@ -98,5 +109,22 @@ func TestResolveCredentials_MissingDeviceID(t *testing.T) {
 	_, _, _, _, err := resolveCredentials(&config.Config{Token: "tok"})
 	if err == nil {
 		t.Fatal("expected error for missing device_id")
+	}
+}
+
+func TestNewClient_MockModeDoesNotRequireCredentials(t *testing.T) {
+	t.Setenv("KIME_MOCK", "1")
+
+	if err := os.Unsetenv("KIME_TOKEN"); err != nil {
+		t.Fatalf("Unsetenv failed: %v", err)
+	}
+
+	client, err := NewClient(&config.Config{})
+	if err != nil {
+		t.Fatalf("NewClient in mock mode returned error: %v", err)
+	}
+
+	if client == nil {
+		t.Fatal("expected client in mock mode")
 	}
 }

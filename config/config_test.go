@@ -1,11 +1,14 @@
 package config
 
 import (
+	"bufio"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
+	"runtime"
+	"strings"
 	"testing"
 )
 
@@ -49,25 +52,29 @@ func TestExtractJWTClaims_Invalid(t *testing.T) {
 	}
 }
 
-func TestSaveAndLoad(t *testing.T) {
+func TestConfigDirUsesOverride(t *testing.T) {
 	dir := t.TempDir()
-	origHome := os.Getenv("HOME")
+	t.Setenv("KIME_CONFIG_DIR", dir)
 
-	if err := os.Setenv("HOME", dir); err != nil {
-		t.Fatalf("Setenv failed: %v", err)
+	got, err := configDir()
+	if err != nil {
+		t.Fatalf("configDir failed: %v", err)
 	}
 
-	defer func() {
-		if err := os.Setenv("HOME", origHome); err != nil {
-			t.Fatalf("Setenv failed: %v", err)
-		}
-	}()
+	if got != dir {
+		t.Errorf("configDir = %q, want %q", got, dir)
+	}
+}
+
+func TestSaveAndLoad(t *testing.T) {
+	dir := t.TempDir()
+	t.Setenv("KIME_CONFIG_DIR", dir)
 
 	cfg := &Config{
 		Token:        "tok",
 		DeviceID:     "dev",
 		SessionID:    "sess",
-		UserID:       "usr",
+		UserID:       "user",
 		Language:     "en",
 		ShowProgress: true,
 	}
@@ -76,15 +83,20 @@ func TestSaveAndLoad(t *testing.T) {
 		t.Fatalf("Save failed: %v", err)
 	}
 
-	path := filepath.Join(dir, ".config", "kime", "config.json")
+	path := filepath.Join(dir, "config.json")
 
 	info, err := os.Stat(path)
 	if err != nil {
 		t.Fatalf("Stat failed: %v", err)
 	}
 
-	if got := info.Mode().Perm(); got != 0o600 {
-		t.Errorf("mode = %v, want 0600", got)
+	wantMode := os.FileMode(0o600)
+	if runtime.GOOS == "windows" {
+		wantMode = 0o666
+	}
+
+	if got := info.Mode().Perm(); got != wantMode {
+		t.Fatalf("config file mode = %o, want %o", got, wantMode)
 	}
 
 	if _, err := os.Stat(path + ".tmp"); !os.IsNotExist(err) {
@@ -96,7 +108,66 @@ func TestSaveAndLoad(t *testing.T) {
 		t.Fatalf("Load failed: %v", err)
 	}
 
+	if loaded == nil {
+		t.Fatal("Load returned nil config")
+	}
+
 	if *loaded != *cfg {
-		t.Errorf("Load() = %+v, want %+v", loaded, cfg)
+		t.Fatalf("loaded config = %+v, want %+v", *loaded, *cfg)
+	}
+}
+
+func TestLoadDefaultsLanguageToZh(t *testing.T) {
+	dir := t.TempDir()
+	t.Setenv("KIME_CONFIG_DIR", dir)
+
+	if err := os.WriteFile(filepath.Join(dir, "config.json"), []byte(`{"token":"tok"}`), 0o600); err != nil {
+		t.Fatalf("WriteFile failed: %v", err)
+	}
+
+	loaded, err := Load()
+	if err != nil {
+		t.Fatalf("Load failed: %v", err)
+	}
+
+	if loaded == nil {
+		t.Fatal("Load returned nil config")
+	}
+
+	if loaded.Language != "zh" {
+		t.Fatalf("Language = %q, want zh", loaded.Language)
+	}
+}
+
+func TestInitInteractiveRequiresTTY(t *testing.T) {
+	_, err := InitInteractive()
+	if err == nil {
+		t.Fatal("expected error when stdin is not a terminal")
+	}
+
+	if !strings.Contains(err.Error(), "stdin is not a terminal") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestPromptOrDefault(t *testing.T) {
+	tests := []struct {
+		name         string
+		input        string
+		defaultValue string
+		want         string
+	}{
+		{name: "returns entered value", input: "custom\n", defaultValue: "fallback", want: "custom"},
+		{name: "returns default on blank line", input: "\n", defaultValue: "fallback", want: "fallback"},
+		{name: "returns default on read error", input: "", defaultValue: "fallback", want: "fallback"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			reader := bufio.NewReader(strings.NewReader(tt.input))
+			if got := promptOrDefault(reader, "Label", tt.defaultValue); got != tt.want {
+				t.Fatalf("promptOrDefault() = %q, want %q", got, tt.want)
+			}
+		})
 	}
 }

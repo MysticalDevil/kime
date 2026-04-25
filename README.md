@@ -47,6 +47,8 @@ mise use -g github:MysticalDevil/kime@latest
 
 ### Build from source
 
+Unix-like:
+
 ```bash
 git clone https://github.com/MysticalDevil/kime.git
 cd kime
@@ -60,12 +62,54 @@ Then move the binary to a directory in your `$PATH`:
 mv kime ~/.local/bin/
 ```
 
+Windows PowerShell:
+
+```powershell
+git clone https://github.com/MysticalDevil/kime.git
+cd kime
+go mod tidy
+$env:GOEXPERIMENT = "jsonv2"
+go build -o kime.exe .
+New-Item -ItemType Directory -Force "$HOME\bin" | Out-Null
+Move-Item .\kime.exe "$HOME\bin\kime.exe"
+$env:Path = "$HOME\bin;$env:Path"
+```
+
+Windows binary name: `kime.exe`
+
+### Developer commands
+
+This repository uses `just` as the task runner:
+
+```bash
+just fmt         # format with gofumpt
+just fmt-check   # verify formatting only
+just lint        # run golangci-lint with --fix
+just lint-check  # CI-style lint check
+just test        # run the full test suite
+just coverage    # enforce the coverage gate
+just check       # fmt + lint-check + test + coverage
+```
+
+Current CI coverage gate: **73%** total coverage.
+
 ---
 
 ## Configuration
 
-`kime` reads credentials from `~/.config/kime/config.json`
-(created automatically if you use browser extraction, or you can create it manually).
+`kime` reads credentials from the platform config directory:
+
+- Linux: `~/.config/kime/config.json`
+- macOS: `~/Library/Application Support/kime/config.json`
+- Windows: `%AppData%\kime\config.json`
+
+The cache file is also platform-specific:
+
+- Linux: `~/.cache/kime/membership.json`
+- macOS: `~/Library/Caches/kime/membership.json`
+- Windows: `%LocalAppData%\kime\membership.json`
+
+Both files are created automatically when needed, or you can create them manually.
 
 ### Interactive setup
 
@@ -75,9 +119,15 @@ The easiest way to configure `kime` is via the built-in interactive wizard:
 kime init
 ```
 
+Windows PowerShell:
+
+```powershell
+.\kime.exe init
+```
+
 This will prompt you for your token and auto-extract `device_id`, `session_id`,
 and `user_id` from the JWT payload. You can also set your preferred language and
-other options.
+other options. `kime init` requires an interactive terminal; non-TTY stdin returns a clear error.
 
 ### How to obtain credentials (DevTools)
 
@@ -137,6 +187,8 @@ other options.
 | `KIME_RENDER_MODE` | Render mode: `auto` (default), `unicode`, or `ascii` |
 | `KIME_MOCK` | Set to `1` to enable mock mode (no real API calls) |
 | `KIME_FORCE_REFRESH` | Set to `1` to force a full refresh and update cache |
+| `KIME_CONFIG_DIR` | Override config directory path |
+| `KIME_CACHE_DIR` | Override cache directory path |
 
 If `device_id` or `user_id` is missing, `kime` will try to extract them from the JWT payload automatically.
 
@@ -169,15 +221,37 @@ KIME_RENDER_MODE=ascii kime check
 KIME_FORCE_REFRESH=1 kime check
 ```
 
+Windows PowerShell:
+
+```powershell
+.\kime.exe --help
+.\kime.exe check
+$env:KIME_LANG = "en"; .\kime.exe check
+$env:KIME_MOCK = "1"; .\kime.exe check
+$env:KIME_FORCE_REFRESH = "1"; .\kime.exe check
+```
+
 ---
 
 ## Cache
 
-- **Cache file**: `~/.cache/kime/membership.json`
+- **Cache file**:
+  Linux `~/.cache/kime/membership.json`
+  macOS `~/Library/Caches/kime/membership.json`
+  Windows `%LocalAppData%\kime\membership.json`
 - **TTL**: until `subscription.currentEndTime`
 - "Current Plan", "Validity", and "Model Permissions" are served from cache when the subscription is still active.
 - "Weekly Usage", "Rate Limit", and "Usage Ratio" are always fetched live.
 - Set `KIME_FORCE_REFRESH=1` to bypass cache and force a full update.
+
+---
+
+## Platform Support
+
+- Supported OS targets: Linux, macOS, Windows
+- Windows target: Windows Terminal is the primary supported terminal
+- Recommended Windows shell: PowerShell 7
+- `cmd.exe` and legacy Windows consoles are not supported targets
 
 ---
 

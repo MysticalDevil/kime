@@ -3,6 +3,7 @@ package ui
 
 import (
 	"fmt"
+	"math"
 	"strconv"
 	"strings"
 	"time"
@@ -158,18 +159,22 @@ func RenderWithMode(
 	sb.WriteString(styles.titleStyle.Render(displayText(tr.T("title"), mode)))
 	sb.WriteString("\n")
 
-	// --- Weekly usage & rate limit cards ---
 	var card1, card2 string
 
-	if len(usages.Usages) > 0 {
+	if usages != nil && len(usages.Usages) > 0 {
 		u := usages.Usages[0]
-
 		card1 = buildUsageCard(tr.T("weekly_usage"), u.Detail, "", tr, showProgress, styles)
 
 		if len(u.Limits) > 0 {
 			limit := u.Limits[0]
-			windowText := formatWindow(limit.Window)
-			card2 = buildUsageCard(tr.T("rate_limit"), limit.Detail, windowText, tr, showProgress, styles)
+			card2 = buildUsageCard(
+				tr.T("rate_limit"),
+				limit.Detail,
+				formatWindow(limit.Window),
+				tr,
+				showProgress,
+				styles,
+			)
 		} else {
 			card2 = buildUsageCard(tr.T("rate_limit"), api.UsageDetail{}, "", tr, showProgress, styles)
 		}
@@ -181,13 +186,11 @@ func RenderWithMode(
 	sb.WriteString(lipgloss.JoinHorizontal(lipgloss.Top, card1, " ", card2))
 	sb.WriteString("\n")
 
-	// --- My benefits ---
 	sb.WriteString(styles.sectionTitleStyle.Render(displayText(tr.T("my_benefits"), mode)))
 	sb.WriteString("\n")
 	sb.WriteString(buildSubscriptionBox(sub, tr, styles))
 	sb.WriteString("\n")
 
-	// --- Model permissions ---
 	sb.WriteString(styles.sectionTitleStyle.Render(displayText(tr.T("model_permissions"), mode)))
 	sb.WriteString("\n")
 
@@ -213,25 +216,32 @@ func displayText(text string, mode RenderMode) string {
 }
 
 func formatWindow(window api.LimitWindow) string {
-	switch window.TimeUnit {
+	minutes := window.Duration
+	switch strings.ToUpper(window.TimeUnit) {
 	case "TIME_UNIT_SECOND":
-		return fmt.Sprintf("%ds", window.Duration)
-	case "TIME_UNIT_MINUTE", "":
-		if window.Duration%60 == 0 {
-			return fmt.Sprintf("%dh", window.Duration/60)
-		}
-
-		return fmt.Sprintf("%dmin", window.Duration)
+		minutes = (window.Duration + 59) / 60
 	case "TIME_UNIT_HOUR":
-		return fmt.Sprintf("%dh", window.Duration)
+		minutes = window.Duration * 60
 	case "TIME_UNIT_DAY":
-		return fmt.Sprintf("%dd", window.Duration)
-	default:
-		return fmt.Sprintf("%d %s", window.Duration, window.TimeUnit)
+		minutes = window.Duration * 60 * 24
+	case "TIME_UNIT_MINUTE", "":
 	}
+
+	if minutes%60 == 0 {
+		return fmt.Sprintf("%dh", minutes/60)
+	}
+
+	return fmt.Sprintf("%dmin", minutes)
 }
 
-func buildUsageCard(title string, detail api.UsageDetail, extra string, tr *i18n.I18n, showProgress bool, styles renderStyles) string {
+func buildUsageCard(
+	title string,
+	detail api.UsageDetail,
+	extra string,
+	tr *i18n.I18n,
+	showProgress bool,
+	styles renderStyles,
+) string {
 	var content strings.Builder
 
 	content.WriteString(styles.cardTitleStyle.Render(title))
@@ -263,15 +273,73 @@ func buildUsageCard(title string, detail api.UsageDetail, extra string, tr *i18n
 	}
 
 	reset, err := time.Parse(time.RFC3339Nano, detail.ResetTime)
-	if err == nil && !reset.IsZero() {
-		hours := max(int(time.Until(reset).Hours()), 0)
-		fmt.Fprintf(&content, "\n%s  %s",
-			styles.cardLabelStyle.Render(tr.T("reset_time")),
-			styles.cardValueStyle.Render(tr.T("hours_later", hours)),
-		)
+	if err == nil {
+		dur := time.Until(reset)
+		if dur > 0 {
+			var timeStr string
+
+			if dur < time.Hour {
+				minutes := max(int(math.Ceil(dur.Minutes())), 1)
+				timeStr = tr.T("minutes_later", minutes)
+			} else {
+				hours := max(int(math.Ceil(dur.Hours())), 1)
+				timeStr = tr.T("hours_later", hours)
+			}
+
+			fmt.Fprintf(&content, "\n%s  %s",
+				styles.cardLabelStyle.Render(tr.T("reset_time")),
+				styles.cardValueStyle.Render(timeStr),
+			)
+		}
 	}
 
 	return styles.cardStyle.Render(content.String())
+}
+
+// isBalanceExpired reports whether a balance has passed its ExpireTime.
+// A blank ExpireTime is treated as never expired; an unparseable ExpireTime
+// is also treated as never expired to preserve backward-compatible fallback.
+func isBalanceExpired(b api.Balance, now time.Time) bool {
+	if b.ExpireTime == "" {
+		return false
+	}
+
+	et, err := time.Parse(time.RFC3339Nano, b.ExpireTime)
+	if err != nil {
+		return false
+	}
+
+	return !et.After(now)
+}
+
+// selectPrimaryBalance picks the most relevant balance for display.
+// It prefers FEATURE_OMNI, then FEATURE_CODING, then the first non-expired item.
+func selectPrimaryBalance(balances []api.Balance) *api.Balance {
+	if len(balances) == 0 {
+		return nil
+	}
+
+	now := time.Now()
+
+	for i := range balances {
+		if balances[i].Feature == "FEATURE_OMNI" && !isBalanceExpired(balances[i], now) {
+			return &balances[i]
+		}
+	}
+
+	for i := range balances {
+		if balances[i].Feature == "FEATURE_CODING" && !isBalanceExpired(balances[i], now) {
+			return &balances[i]
+		}
+	}
+
+	for i := range balances {
+		if !isBalanceExpired(balances[i], now) {
+			return &balances[i]
+		}
+	}
+
+	return &balances[0]
 }
 
 func buildSubscriptionBox(sub *api.GetSubscriptionResponse, tr *i18n.I18n, styles renderStyles) string {
@@ -299,14 +367,12 @@ func buildSubscriptionBox(sub *api.GetSubscriptionResponse, tr *i18n.I18n, style
 		)
 	}
 
-	if len(sub.Balances) > 0 {
-		b := sub.Balances[0]
+	if b := selectPrimaryBalance(sub.Balances); b != nil {
 		ratio := b.AmountUsedRatio * 100
-		color := gradientGreenToRed(b.AmountUsedRatio)
 
 		style := styles.cardValueStyle
-		if styles.progressFilled == "█" {
-			style = lipgloss.NewStyle().Foreground(lipgloss.Color(color))
+		if modeUsesUnicode(styles) {
+			style = lipgloss.NewStyle().Foreground(lipgloss.Color(gradientGreenToRed(b.AmountUsedRatio)))
 		}
 
 		fmt.Fprintf(&content, "%s  %s",
@@ -316,6 +382,10 @@ func buildSubscriptionBox(sub *api.GetSubscriptionResponse, tr *i18n.I18n, style
 	}
 
 	return styles.boxStyle.Render(content.String())
+}
+
+func modeUsesUnicode(styles renderStyles) bool {
+	return styles.progressFilled == "█"
 }
 
 func buildCapabilityTable(caps []api.Capability, tr *i18n.I18n, styles renderStyles) string {
@@ -333,27 +403,21 @@ func buildCapabilityTable(caps []api.Capability, tr *i18n.I18n, styles renderSty
 	))
 
 	for i, c := range caps {
-		name := featureName(c.Feature, tr)
-
 		rowStyle := styles.rowOddStyle
 		if i%2 == 0 {
 			rowStyle = styles.rowEvenStyle
 		}
 
-		row := lipgloss.JoinHorizontal(lipgloss.Left,
-			rowStyle.Width(nameWidth).Render(name),
+		rows = append(rows, lipgloss.JoinHorizontal(lipgloss.Left,
+			rowStyle.Width(nameWidth).Render(featureName(c.Feature, tr)),
 			rowStyle.Width(paraWidth).Render(fmt.Sprintf("%d", c.Constraint.Parallelism)),
-		)
-		rows = append(rows, row)
+		))
 	}
 
-	table := lipgloss.JoinVertical(lipgloss.Left, rows...)
-
-	return styles.boxStyle.Render(table)
+	return styles.boxStyle.Render(lipgloss.JoinVertical(lipgloss.Left, rows...))
 }
 
 func featureName(feature string, tr *i18n.I18n) string {
-	// Keep feature names bilingual; if no mapping, return raw value
 	switch feature {
 	case "FEATURE_AGENT":
 		return "Agent"
@@ -389,9 +453,7 @@ func gradientGreenToRed(ratio float64) string {
 		ratio = 1
 	}
 
-	// 0% -> #00D26A (0, 210, 106)
-	// 100% -> #FF4444 (255, 68, 68)
-	r := int(0 + (255-0)*ratio)
+	r := int((255 - 0) * ratio)
 	g := int(210 + (68-210)*ratio)
 	b := int(106 + (68-106)*ratio)
 
@@ -417,7 +479,6 @@ func renderProgressBar(remainingStr, limitStr string, width int, styles renderSt
 
 	filled := int(ratio * float64(width))
 	empty := width - filled
-
 	bar := styles.progressFilledStyle.Render(strings.Repeat(styles.progressFilled, filled)) +
 		styles.progressEmptyStyle.Render(strings.Repeat(styles.progressEmpty, empty))
 

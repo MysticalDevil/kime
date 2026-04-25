@@ -1,0 +1,25 @@
+{
+  "usages": [
+    {
+      "scope": "FEATURE_CODING",
+      "detail": {
+        "limit": "100",
+        "remaining": "99",
+        "resetTime": __RESET_TIME_1__
+      },
+      "limits": [
+        {
+          "window": {
+            "duration": 300,
+            "timeUnit": "TIME_UNIT_MINUTE"
+          },
+          "detail": {
+            "limit": "100",
+            "remaining": "98",
+            "resetTime": __RESET_TIME_2__
+          }
+        }
+      ]
+    }
+  ]
+}

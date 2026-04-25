@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	jsonv2 "encoding/json/v2"
@@ -21,15 +22,29 @@ type MembershipCache struct {
 	Data     json.RawMessage `json:"data"`
 }
 
+var cacheDirFunc = defaultCacheDir
+
+// test injection wrapper: delegates to cacheDirFunc so tests can swap the directory provider.
+// ast-grep-ignore: passthrough-wrapper
 func cacheDir() (string, error) {
-	home, err := os.UserHomeDir()
+	return cacheDirFunc()
+}
+
+// defaultCacheDir returns the platform cache directory, respecting KIME_CACHE_DIR.
+func defaultCacheDir() (string, error) {
+	if dir := strings.TrimSpace(os.Getenv("KIME_CACHE_DIR")); dir != "" {
+		return dir, nil
+	}
+
+	base, err := os.UserCacheDir()
 	if err != nil {
 		return "", err
 	}
 
-	return filepath.Join(home, ".cache", "kime"), nil
+	return filepath.Join(base, "kime"), nil
 }
 
+// cachePath returns the full path to the cache file.
 func cachePath() (string, error) {
 	dir, err := cacheDir()
 	if err != nil {
@@ -39,6 +54,7 @@ func cachePath() (string, error) {
 	return filepath.Join(dir, cacheFileName), nil
 }
 
+// ensureDir creates the cache directory if it does not exist.
 func ensureDir() error {
 	dir, err := cacheDir()
 	if err != nil {

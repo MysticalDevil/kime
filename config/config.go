@@ -7,6 +7,7 @@ import (
 	"encoding/base64"
 	"encoding/json/jsontext"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -25,15 +26,33 @@ type Config struct {
 	ShowProgress bool   `json:"show_progress"`
 }
 
+var (
+	configDirFunc           = defaultConfigDir
+	readPassword            = term.ReadPassword
+	stdin         io.Reader = os.Stdin
+)
+
+// test injection wrapper: delegates to configDirFunc so tests can swap the directory provider.
+// ast-grep-ignore: passthrough-wrapper
 func configDir() (string, error) {
-	home, err := os.UserHomeDir()
+	return configDirFunc()
+}
+
+// defaultConfigDir returns the platform config directory, respecting KIME_CONFIG_DIR.
+func defaultConfigDir() (string, error) {
+	if dir := strings.TrimSpace(os.Getenv("KIME_CONFIG_DIR")); dir != "" {
+		return dir, nil
+	}
+
+	base, err := os.UserConfigDir()
 	if err != nil {
 		return "", err
 	}
 
-	return filepath.Join(home, ".config", "kime"), nil
+	return filepath.Join(base, "kime"), nil
 }
 
+// configPath returns the full path to the config file.
 func configPath() (string, error) {
 	dir, err := configDir()
 	if err != nil {
@@ -43,6 +62,7 @@ func configPath() (string, error) {
 	return filepath.Join(dir, "config.json"), nil
 }
 
+// ensureDir creates the config directory if it does not exist.
 func ensureDir() error {
 	dir, err := configDir()
 	if err != nil {
@@ -52,7 +72,7 @@ func ensureDir() error {
 	return os.MkdirAll(dir, 0o755)
 }
 
-// Load reads config file.
+// Load reads the config file. Returns nil if the file does not exist.
 func Load() (*Config, error) {
 	path, err := configPath()
 	if err != nil {
@@ -80,7 +100,7 @@ func Load() (*Config, error) {
 	return &cfg, nil
 }
 
-// Save writes config file.
+// Save writes the config file. It creates the directory if necessary.
 func Save(cfg *Config) error {
 	if err := ensureDir(); err != nil {
 		return err
@@ -141,11 +161,15 @@ func ExtractJWTClaims(token string) (map[string]string, error) {
 
 // InitInteractive runs an interactive prompt to create or update the config file.
 func InitInteractive() (*Config, error) {
-	reader := bufio.NewReader(os.Stdin)
+	if !term.IsTerminal(os.Stdin.Fd()) {
+		return nil, fmt.Errorf("stdin is not a terminal; run kime init in PowerShell, Windows Terminal, or another interactive shell")
+	}
+
+	reader := bufio.NewReader(stdin)
 
 	fmt.Print("Token (hidden input): ")
 
-	tokenBytes, err := term.ReadPassword(os.Stdin.Fd())
+	tokenBytes, err := readPassword(os.Stdin.Fd())
 	if err != nil {
 		return nil, fmt.Errorf("failed to read token: %w", err)
 	}

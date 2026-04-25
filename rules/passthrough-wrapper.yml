@@ -1,0 +1,30 @@
+id: passthrough-wrapper
+language: go
+message: Detected passthrough wrapper — review if this indirection is necessary
+severity: hint
+note: |
+  This function/method does nothing except delegate its arguments to another call.
+  Such wrappers are acceptable for test injection (e.g. `cacheDir` → `cacheDirFunc`),
+  but avoid them when they add no value beyond renaming.
+ignores:
+  - '**/*_test.go'
+  - 'tests/**'
+  - 'api/testdata/**'
+rule:
+  any:
+    - pattern: |
+        func $FUNC($$$PARAMS) $RETURNS {
+          return $CALL($$$ARGS)
+        }
+    - pattern: |
+        func $FUNC($$$PARAMS) {
+          $CALL($$$ARGS)
+        }
+    - pattern: |
+        func ($$$RCV) $METHOD($$$PARAMS) $RETURNS {
+          return $OBJ.$FIELD($$$ARGS)
+        }
+    - pattern: |
+        func ($$$RCV) $METHOD($$$PARAMS) {
+          $OBJ.$FIELD($$$ARGS)
+        }
