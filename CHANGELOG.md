@@ -1,5 +1,13 @@
 # Changelog
 
+## v1.1.5 - 2026-05-06
+
+### What's Changed
+
+- **fix**: `mockUsagesJSON` now uses `jsonv2.Marshal` for time value embedding instead of `fmt.Sprintf("%q")`, preventing double-quote issues if the template format changes.
+- **fix**: Feature names `Agent`, `Deep Research`, `KimiClaw`, and `Swarm` are now properly localized across all four languages (zh/zh_TW/en/ja) instead of being hardcoded in English.
+- **refactor**: Extracted the hardcoded progress bar width `18` to a named constant `progressBarWidth`.
+
 ## v1.1.4 - 2026-04-26
 
 ### What's Changed
