@@ -140,6 +140,8 @@ func stylesForMode(mode RenderMode) renderStyles {
 	}
 }
 
+const progressBarWidth = 18
+
 // Render builds the terminal UI from API responses.
 func Render(usages *api.GetUsagesResponse, sub *api.GetSubscriptionResponse, tr *i18n.I18n, showProgress bool) string {
 	return RenderWithMode(usages, sub, tr, showProgress, RenderModeUnicode)
@@ -258,7 +260,7 @@ func buildUsageCard(
 	if showProgress {
 		content.WriteString(styles.cardLabelStyle.Render(tr.T("remaining_total")))
 		content.WriteString("\n")
-		content.WriteString(renderProgressBar(detail.Remaining, detail.Limit, 18, styles))
+		content.WriteString(renderProgressBar(detail.Remaining, detail.Limit, progressBarWidth, styles))
 	} else {
 		fmt.Fprintf(&content, "%s  %s",
 			styles.cardLabelStyle.Render(tr.T("remaining_total")),
@@ -423,7 +425,7 @@ func buildCapabilityTable(caps []api.Capability, tr *i18n.I18n, styles renderSty
 func featureName(feature string, tr *i18n.I18n) string {
 	switch feature {
 	case "FEATURE_AGENT":
-		return "Agent"
+		return tr.T("feature_agent")
 	case "FEATURE_WEBSITES":
 		return tr.T("feature_websites")
 	case "FEATURE_DOCUMENTS":
@@ -433,15 +435,15 @@ func featureName(feature string, tr *i18n.I18n) string {
 	case "FEATURE_SHEETS":
 		return tr.T("feature_sheets")
 	case "FEATURE_DEEP_RESEARCH":
-		return "Deep Research"
+		return tr.T("feature_deep_research")
 	case "FEATURE_CODING":
 		return tr.T("feature_coding")
 	case "FEATURE_CHAT":
 		return tr.T("feature_chat")
 	case "FEATURE_CLAW":
-		return "KimiClaw"
+		return tr.T("feature_claw")
 	case "FEATURE_SWARM":
-		return "Swarm"
+		return tr.T("feature_swarm")
 	default:
 		return feature
 	}

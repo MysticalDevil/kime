@@ -3,7 +3,6 @@ package api
 import (
 	"context"
 	_ "embed"
-	"fmt"
 	"os"
 	"strings"
 	"time"
@@ -20,12 +19,12 @@ var (
 )
 
 func mockUsagesJSON() string {
-	reset1 := time.Now().Add(7 * 24 * time.Hour).Format(time.RFC3339Nano)
-	reset2 := time.Now().Add(5 * time.Hour).Format(time.RFC3339Nano)
+	reset1, _ := jsonv2.Marshal(time.Now().Add(7 * 24 * time.Hour).Format(time.RFC3339Nano))
+	reset2, _ := jsonv2.Marshal(time.Now().Add(5 * time.Hour).Format(time.RFC3339Nano))
 
 	return strings.NewReplacer(
-		"__RESET_TIME_1__", fmt.Sprintf("%q", reset1),
-		"__RESET_TIME_2__", fmt.Sprintf("%q", reset2),
+		"__RESET_TIME_1__", string(reset1),
+		"__RESET_TIME_2__", string(reset2),
 	).Replace(mockUsagesTemplate)
 }
 
